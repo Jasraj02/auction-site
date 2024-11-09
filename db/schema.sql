@@ -30,13 +30,13 @@ CREATE TABLE Sellers (
 ENGINE = InnoDB;
 
 CREATE TABLE Categories (
-	categoryID INT AUTO_INCREMENT PRIMARY KEY,
+    categoryID INT AUTO_INCREMENT PRIMARY KEY,
     categoryType VARCHAR(60) NOT NULL
 )
 ENGINE = InnoDB;
 
 CREATE TABLE Auctions (
-	auctionID INT AUTO_INCREMENT PRIMARY KEY,
+    auctionID INT AUTO_INCREMENT PRIMARY KEY,
     sellerID INT NOT NULL,
     categoryID INT NOT NULL,
     FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
@@ -52,7 +52,7 @@ CREATE TABLE Auctions (
 ENGINE = InnoDB;
 
 CREATE TABLE UserViews (
-	userID INT NOT NULL,
+    userID INT NOT NULL,
     auctionID INT NOT NULL,
     FOREIGN KEY (userID) REFERENCES Users(userID),
     FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
@@ -61,17 +61,17 @@ CREATE TABLE UserViews (
 ENGINE = InnoDB;
 
 CREATE TABLE Bids (
-	bidID INT AUTO_INCREMENT PRIMARY KEY,
+    bidID INT AUTO_INCREMENT PRIMARY KEY,
     buyerID INT NOT NULL,
     auctionID INT NOT NULL,
     FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
- 	FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
+    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
     bidPrice DECIMAL(10, 2) NOT NULL  
 )
 ENGINE = InnoDB;
 
 CREATE TABLE Updates (
-	updateID INT AUTO_INCREMENT PRIMARY KEY 	    
+    updateID INT AUTO_INCREMENT PRIMARY KEY 	    
 )
 ENGINE = InnoDB;
 
@@ -82,7 +82,7 @@ CREATE TABLE BuyerUpdates (
     auctionID INT NOT NULL,
     bidID INT NOT NULL,
     FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
-   	FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
+    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
     FOREIGN KEY (bidID) REFERENCES Bids(bidID)
 )
 ENGINE = InnoDB;
@@ -94,7 +94,7 @@ CREATE TABLE SellerUpdates (
     auctionID INT NOT NULL,
     bidID INT NOT NULL,
     FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
-   	FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
+    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
     FOREIGN KEY (bidID) REFERENCES Bids(bidID)
 )
 ENGINE = InnoDB;
@@ -109,7 +109,7 @@ CREATE TABLE UpdateProperties (
 ENGINE = InnoDB;
 
 CREATE TABLE Questions (
-	questionID INT AUTO_INCREMENT PRIMARY KEY,
+    questionID INT AUTO_INCREMENT PRIMARY KEY,
     auctionID INT NOT NULL,
     buyerID INT NOT NULL,
     FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
@@ -124,7 +124,7 @@ ENGINE = InnoDB;
 CREATE TABLE Watchlists (
     buyerID INT NOT NULL,
     auctionID INT NOT NULL,
-	FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
+    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
     FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
     notificationEnabled BOOLEAN NOT NULL
 )
