@@ -4,10 +4,15 @@
   // ONLY after the user's login credentials have been verified via a 
   // database query.
   session_start();
-  $_SESSION['logged_in'] = false;
-  $_SESSION['account_type'] = 'seller';
+  if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+    $loggedIn = true;
+    $username = $_SESSION['username'];
+    $accountType = $_SESSION['account_type'];
+  } else {
+    $loggedIn = false;
+    $accountType = 'seller';
+  }
 ?>
-
 
 <!doctype html>
 <html lang="en">
@@ -30,14 +35,17 @@
 
 <!-- Navbars -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light mx-2">
-  <a class="navbar-brand" href="#">Site Name <!--CHANGEME!--></a>
+  <a class="navbar-brand" href="#">Site Name<!--CHANGEME!--></a>
+  <?php if ($loggedIn === true): ?>
+    <span class="navbar-brand"><?php echo htmlspecialchars($username); ?></span>
+  <?php endif; ?>
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
     
 <?php
   // Displays either login or logout on the right, depending on user's
   // current status (session).
-  if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == true) {
+  if ($loggedIn === true) {
     echo '<a class="nav-link" href="logout.php">Logout</a>';
   }
   else {
@@ -54,7 +62,7 @@
       <a class="nav-link" href="browse.php">Browse</a>
     </li>
 <?php
-  if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'buyer') {
+  if ($accountType === 'buyer') {
   echo('
 	<li class="nav-item mx-1">
       <a class="nav-link" href="mybids.php">My Bids</a>
@@ -63,7 +71,7 @@
       <a class="nav-link" href="recommendations.php">Recommended</a>
     </li>');
   }
-  if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
+  if ($accountType === 'seller') {
   echo('
 	<li class="nav-item mx-1">
       <a class="nav-link" href="mylistings.php">My Listings</a>
@@ -72,6 +80,21 @@
       <a class="nav-link btn border-light" href="create_auction.php">+ Create auction</a>
     </li>');
   }
+  if ($accountType === 'both') {
+    echo('
+    <li class="nav-item mx-1">
+      <a class="nav-link" href="mybids.php">My Bids</a>
+    </li>
+	  <li class="nav-item mx-1">
+      <a class="nav-link" href="recommendations.php">Recommended</a>
+    </li>
+    <li class="nav-item mx-1">
+        <a class="nav-link" href="mylistings.php">My Listings</a>
+      </li>
+    <li class="nav-item ml-3">
+        <a class="nav-link btn border-light" href="create_auction.php">+ Create auction</a>
+      </li>');
+    }
 ?>
   </ul>
 </nav>
@@ -88,14 +111,17 @@
 
       <!-- Modal body -->
       <div class="modal-body">
+        <?php if (isset($loginMessage)) : ?>
+          <div class="alert alert-info"><?php echo $loginMessage; ?></div>
+        <?php endif; ?>
         <form method="POST" action="login_result.php">
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="text" class="form-control" id="email" placeholder="Email">
+            <input type="text" class="form-control" id="email" name="email">
           </div>
           <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" class="form-control" id="password" placeholder="Password">
+            <input type="password" class="form-control" id="password" name="password">
           </div>
           <button type="submit" class="btn btn-primary form-control">Sign in</button>
         </form>
