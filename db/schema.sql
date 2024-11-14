@@ -8,12 +8,10 @@ USE auctionSite;
 
 CREATE TABLE Users (
     userID INT AUTO_INCREMENT PRIMARY KEY,
-    firstName VARCHAR(60) NOT NULL,
-    lastName VARCHAR(60) NOT NULL,
-    address VARCHAR(250) NOT NULL,
-    telephoneNumber VARCHAR(20) NOT NULL,
+    userRole VARCHAR(20) NOT NULL, 
+    username VARCHAR(100) UNIQUE NOT NULL,            
     email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(60) NOT NULL
+    userPassword VARCHAR(100) NOT NULL
 )
 ENGINE = InnoDB;
 

@@ -1,7 +1,45 @@
-<?php include_once("header.php")?>
+<?php 
+include_once("header.php");
+
+if (isset($_SESSION['errors'])) {
+  $errors = $_SESSION['errors'];
+} else {
+  $errors = []; 
+}
+
+if (isset($_SESSION['formData'])) {
+  $formData = $_SESSION['formData'];
+} else {
+  $formData = []; 
+}
+
+if (isset($_SESSION['successMessage'])) {
+  $successMessage = $_SESSION['successMessage'];
+} else {
+  $successMessage = '';
+}
+?>
 
 <div class="container">
 <h2 class="my-3">Register new account</h2>
+
+<?php if (!empty($errors)): ?>
+  <div class="alert alert-danger">
+    <ul>
+      <?php foreach ($errors as $error): ?>
+        <li><?= htmlspecialchars($error) ?></li>
+          <?php endforeach; ?>
+    </ul>
+  </div>
+<?php endif;?>
+
+<?php if($successMessage): ?>
+  <div class="alert alert-success">
+    <p><?= htmlspecialchars($successMessage) ?></p>
+  </div>
+<?php endif;?>
+
+<?php unset($_SESSION['errors'], $_SESSION['formData'], $_SESSION['successMessage']);?>
 
 <!-- Create auction form -->
 <form method="POST" action="process_registration.php">
@@ -9,34 +47,45 @@
     <label for="accountType" class="col-sm-2 col-form-label text-right">Registering as a:</label>
 	<div class="col-sm-10">
 	  <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="accountType" id="accountBuyer" value="buyer" checked>
+        <input class="form-check-input" type="radio" name="accountType" id="accountBuyer" value="buyer" <?php echo isset($formData['accountType']) && $formData['accountType'] === 'buyer' ? 'checked' : '';?>>
         <label class="form-check-label" for="accountBuyer">Buyer</label>
       </div>
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="accountType" id="accountSeller" value="seller">
+        <input class="form-check-input" type="radio" name="accountType" id="accountSeller" value="seller" <?php echo isset($formData['accountType']) && $formData['accountType'] === 'seller' ? 'checked' : '';?>>
         <label class="form-check-label" for="accountSeller">Seller</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="accountType" id="accountBoth" value="both" <?php echo isset($formData['accountType']) && $formData['accountType'] === 'both' ? 'checked' : '';?>>
+        <label class="form-check-label" for="accountBoth">Both</label>
       </div>
       <small id="accountTypeHelp" class="form-text-inline text-muted"><span class="text-danger">* Required.</span></small>
 	</div>
   </div>
   <div class="form-group row">
+    <label for="username" class="col-sm-2 col-form-label text-right">Username</label>
+	<div class="col-sm-10">
+      <input type="text" name = "username" class="form-control" id="username" value = "<?php echo isset($formData['username']) ? $formData['username'] : '';?>" placeholder="JohnSmith123">
+      <small id="usernameHelp" class="form-text text-muted"><span class="text-danger">* Required.</span></small>
+	</div>
+  </div>
+  <div class="form-group row">
     <label for="email" class="col-sm-2 col-form-label text-right">Email</label>
 	<div class="col-sm-10">
-      <input type="text" class="form-control" id="email" placeholder="Email">
+      <input type="text" name = "email" class="form-control" id="email" value = "<?php echo isset($formData['email']) ? $formData['email'] : '';?>" placeholder="johnsmith@gmail.com">
       <small id="emailHelp" class="form-text text-muted"><span class="text-danger">* Required.</span></small>
 	</div>
   </div>
   <div class="form-group row">
     <label for="password" class="col-sm-2 col-form-label text-right">Password</label>
     <div class="col-sm-10">
-      <input type="password" class="form-control" id="password" placeholder="Password">
+      <input type="password" name = "password" class="form-control" id="password" placeholder="Password">
       <small id="passwordHelp" class="form-text text-muted"><span class="text-danger">* Required.</span></small>
     </div>
   </div>
   <div class="form-group row">
     <label for="passwordConfirmation" class="col-sm-2 col-form-label text-right">Repeat password</label>
     <div class="col-sm-10">
-      <input type="password" class="form-control" id="passwordConfirmation" placeholder="Enter password again">
+      <input type="password" name = "passwordConfirmation" class="form-control" id="passwordConfirmation" placeholder="Enter password again">
       <small id="passwordConfirmationHelp" class="form-text text-muted"><span class="text-danger">* Required.</span></small>
     </div>
   </div>
