@@ -24,53 +24,66 @@
       before they try to send it, but that kind of functionality should be
       extremely low-priority / only done after all database functions are
       complete. -->
-      <form method="post" action="create_auction_result.php">
+      <form method="post" action="./create_auction_result.php">
         <div class="form-group row">
-          <label for="auctionTitle" class="col-sm-2 col-form-label text-right">Title of auction</label>
+          <!-- added required to make sure you have to input something -->
+          <label required for="auctionTitle" class="col-sm-2 col-form-label text-right">Title of auction</label>
           <div class="col-sm-10">
-            <input type="text" class="form-control" id="auctionTitle" placeholder="e.g. Black mountain bike">
+            <input type="text" name="auctionTitle" class="form-control" id="auctionTitle" placeholder="e.g. Black mountain bike">
             <small id="titleHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> A short description of the item you're selling, which will display in listings.</small>
           </div>
         </div>
         <div class="form-group row">
           <label for="auctionDetails" class="col-sm-2 col-form-label text-right">Details</label>
           <div class="col-sm-10">
-            <textarea class="form-control" id="auctionDetails" rows="4"></textarea>
+            <textarea class="form-control" name="auctionDetails" id="auctionDetails" rows="4"></textarea>
             <small id="detailsHelp" class="form-text text-muted">Full details of the listing to help bidders decide if it's what they're looking for.</small>
           </div>
         </div>
         <div class="form-group row">
           <label for="auctionCategory" class="col-sm-2 col-form-label text-right">Category</label>
           <div class="col-sm-10">
-            <select class="form-control" id="auctionCategory">
-              <option selected>Choose...</option>
-              <option value="fill">Fill me in</option>
-              <option value="with">with options</option>
-              <option value="populated">populated from a database?</option>
+            <select class="form-control" name="auctionCategory" id="auctionCategory">
+              <!-- added disabled to make sure you can't pick Choose.. -->
+              <option selected disabled>Choose...</option>
+              <option value="art">Art & Collectables</option>
+              <option value="electronics">Electronics</option>
+              <option value="fashion">Fashion</option>
+              <option value="health">Health & Beauty</option>
+              <option value="home">Home</option>
+              <option value="lifestyle">Lifestyle & Recreation</option>
+              <option value="media">Media</option>
+              <option value="others">Others</option>
+              <option value="vehicles">Vehicles & Automotive</option>
+              <option value="workplace">Workplace Supplies & Equipment</option>
             </select>
             <small id="categoryHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Select a category for this item.</small>
           </div>
         </div>
         <div class="form-group row">
-          <label for="auctionStartPrice" class="col-sm-2 col-form-label text-right">Starting price</label>
+          <!-- added an input type of number AND required (to make sure you have to input something) -->
+          <!-- need to add more form validation to prevent negative numbers -->
+          <label type="number" required for="auctionStartPrice" class="col-sm-2 col-form-label text-right">Starting price</label>
           <div class="col-sm-10">
 	        <div class="input-group">
               <div class="input-group-prepend">
                 <span class="input-group-text">£</span>
               </div>
-              <input type="number" class="form-control" id="auctionStartPrice">
+              <input type="number" name="auctionStartPrice" class="form-control" id="auctionStartPrice">
             </div>
             <small id="startBidHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Initial bid amount.</small>
           </div>
         </div>
         <div class="form-group row">
-          <label for="auctionReservePrice" class="col-sm-2 col-form-label text-right">Reserve price</label>
+          <!-- could add more form validation to prevent negative numbers -->
+          <!-- added an input type of number -->
+          <label type="number" for="auctionReservePrice" class="col-sm-2 col-form-label text-right">Reserve price</label>
           <div class="col-sm-10">
             <div class="input-group">
               <div class="input-group-prepend">
                 <span class="input-group-text">£</span>
               </div>
-              <input type="number" class="form-control" id="auctionReservePrice">
+              <input type="number" name="auctionReservePrice" class="form-control" id="auctionReservePrice">
             </div>
             <small id="reservePriceHelp" class="form-text text-muted">Optional. Auctions that end below this price will not go through. This value is not displayed in the auction listing.</small>
           </div>
@@ -78,7 +91,7 @@
         <div class="form-group row">
           <label for="auctionEndDate" class="col-sm-2 col-form-label text-right">End date</label>
           <div class="col-sm-10">
-            <input type="datetime-local" class="form-control" id="auctionEndDate">
+            <input type="datetime-local" name="auctionEndDate" class="form-control" id="auctionEndDate">
             <small id="endDateHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Day for the auction to end.</small>
           </div>
         </div>
