@@ -39,7 +39,7 @@ CREATE TABLE Auctions (
     categoryID INT NOT NULL,
     FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
     FOREIGN KEY (categoryID) REFERENCES Categories(categoryID),
-    description VARCHAR(250) NOT NULL, 
+    auctionDescription VARCHAR(250) NOT NULL, 
     imageFileName VARCHAR(250) NOT NULL, 
     startingPrice DECIMAL(10, 2) NOT NULL,
     reservePrice DECIMAL(10, 2) NOT NULL,

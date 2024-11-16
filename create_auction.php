@@ -69,7 +69,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text">£</span>
               </div>
-              <input type="number" name="auctionStartPrice" class="form-control" id="auctionStartPrice">
+              <input type="number" step= ".01" name="auctionStartPrice" class="form-control" id="auctionStartPrice">
             </div>
             <small id="startBidHelp" class="form-text text-muted"><span class="text-danger">* Required.</span> Initial bid amount.</small>
           </div>
@@ -83,7 +83,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text">£</span>
               </div>
-              <input type="number" name="auctionReservePrice" class="form-control" id="auctionReservePrice">
+              <input type="number" step= ".01" name="auctionReservePrice" class="form-control" id="auctionReservePrice">
             </div>
             <small id="reservePriceHelp" class="form-text text-muted">Optional. Auctions that end below this price will not go through. This value is not displayed in the auction listing.</small>
           </div>

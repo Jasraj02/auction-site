@@ -19,6 +19,27 @@ require_once("database.php");
             make sure it can be inserted into the database. If there is an
             issue, give some semi-helpful feedback to user. */
 
+// function to find the number of decimal places 
+function decimalPlaces($numberGiven) {
+    if (is_integer($numberGiven)) {
+        $dp = 0;
+    } else {
+        $dp = strlen($numberGiven) - strrpos($numberGiven, '.') - 1;
+    }
+    return $dp;
+}
+
+// function to print any errors picked up (helps when debugging)
+function errorPrinter($errorList) {
+    if (count($errorList) === 0) {
+        echo "No errors";
+    } else {
+        foreach($errorList as $indError) {
+            echo "$indError";
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // first get all the form results
@@ -29,16 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reservePrice = ($_POST["auctionReservePrice"] ?? NULL);
     $endTime = $_POST["auctionEndDate"] ?? "";
 
-
-    // not sure if the below line works 
     $sellerName = $_SESSION["username"];
 
-    echo($sellerName);
-
     $error = [];
-
-    // do all the error checking below 
-    // make sure endTime is after current date 
 
     // error checks for auction title
     $genericTitles = ["Item", "Auction", "Product", "For Sale"];
@@ -57,24 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // error checks for auction detail box 
     if (strlen($auctionDetails) > 250) {
         $error[] = "Auction description cannot be longer than 250 characters.";
-    } elseif (strip_tags($auctionTitle) !== $auctionTitle) {
+    } elseif (strip_tags($auctionDetails) !== $auctionDetails) {
         $error[] = "Auction description contains invalid characters.";
     }
 
     // error checks for Category
-    // (this is also handled client side but having this is a good fail safe)
-    if (empty($auctionTitle)) {
+    if (empty($category)) {
         $error[] = "Auction category must be chosen.";
-    }
-
-    // function to find the number of decimal places 
-    function decimalPlaces($numberGiven) {
-        if (is_integer($numberGiven)) {
-            $dp = 0;
-        } else {
-            $dp = return strlen($numberGiven) - strrpos($numberGiven, '.') - 1;
-        }
-        return $dp;
     }
 
     // error checks for Starting Price
@@ -91,40 +94,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // error checks for Reserve Price
-    if (!is_numeric($reservePrice)) {
-        $error[] = "Reserve price must be a number.";
-    }
-    $reservePrice = (float)$reservePrice ;
-    if ($reservePrice <= 0) {
-        $error[] = "Reserve price must be a postive number.";
-    } elseif ($reservePrice < $startingPrice) {
-        $error[] = "Reserve price must be smaller than Starting price.";
-    } elseif (decimalPlaces($reservePrice) > 2) {
-        $error[] = "Reserve price must have a maximum of 2 decimal places.";
+    if (!($reservePrice == NULL)) {
+        // run error checking only if reserve price is given
+        if (!is_numeric($reservePrice)) {
+            $error[] = "Reserve price must be a number.";
+        }
+        $reservePrice = (float)$reservePrice ;
+        if ($reservePrice <= 0) {
+            $error[] = "Reserve price must be a postive number.";
+        } elseif ($reservePrice > $startingPrice) {
+            $error[] = "Reserve price must be smaller than Starting price.";
+        } elseif (decimalPlaces($reservePrice) > 2) {
+            $error[] = "Reserve price must have a maximum of 2 decimal places.";
+        }
     }
 
     // error checks for End Time 
     if (empty($endTime)) {
         $error[] = "End date for the auction must be given.";
     } 
-    $endTime = str_replace('T'," ", $endTime);
+    $endTime = str_replace("T"," ", $endTime);
 
     if (time() >= strtotime($endTime)) {
         $error[] = "End date must be in the future.";
     }
     
-    // create a SQL query
-    // for the auctionID look at the number of auctions in the table and just add 1 to get new ID (or also add a letter depending on the category)
+    if (count($error) > 0) {
+        $_SESSION['errors'] = $error;
+        header('Location: register.php');
+        exit;
+    }
+
+    // CONVERT Category to CategoryID 
 
 }
 
 
-
 /* TODO #3: If everything looks good, make the appropriate call to insert
             data into the database. */
-            
+
+// create a SQL query
+// make an auctionID
+// do a lookup to get the sellerID
+// need to add auctionTitle to the AuctionsTable
+
+$sqlQuery = "INSERT INTO Auctions (sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime)";
+$sqlQuery = $sqlQuery . "VALUES () ";
+
+    // $auctionTitle = trim($_POST["auctionTitle"] ?? "");
+    // $auctionDetails = trim($_POST["auctionDetails"] ?? "");
+    // $category = $_POST["auctionCategory"] ?? "";
+    // $startingPrice = $_POST["auctionStartPrice"] ?? 0;
+    // $reservePrice = ($_POST["auctionReservePrice"] ?? NULL);
+    // $endTime = $_POST["auctionEndDate"] ?? "";
+
 
 // If all is successful, let user know.
+
+// MAKE SURE TO CHANGE THE FIX ME PART 
+// may need to use a GET request to change the url to the auction URL page
+// will need to make changes to listing.php
 echo('<div class="text-center">Auction successfully created! <a href="FIXME">View your new listing.</a></div>');
 
 
