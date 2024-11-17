@@ -58,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $genericTitles = ["Item", "Auction", "Product", "For Sale"];
     if (empty($auctionTitle)) {
         $error[] = "Auction title required";
-    } elseif (strlen($auctionTitle) > 100) {
-        $error[] = "Auction title cannot be longer than 100 characters.";
+    } elseif (strlen($auctionTitle) > 50) {
+        $error[] = "Auction title cannot be longer than 50 characters.";
     } elseif (strlen($auctionTitle) < 5) {
         $error[] = "Auction title must be longer than 5 characters.";
     } elseif (in_array($auctionTitle,$genericTitles)) {
@@ -107,6 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (decimalPlaces($reservePrice) > 2) {
             $error[] = "Reserve price must have a maximum of 2 decimal places.";
         }
+    else {
+        $reservePrice = $startingPrice;
+    }
     }
 
     // error checks for End Time 
@@ -118,36 +121,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (time() >= strtotime($endTime)) {
         $error[] = "End date must be in the future.";
     }
+
+    // convert category to categoryID 
+    if ($category == "art") {
+        $categoryID = 1;
+    } elseif ($category == "electronics") {
+        $categoryID = 2;
+    } elseif ($category == "fashion") {
+        $categoryID = 3;
+    } elseif ($category == "health") {
+        $categoryID = 4;
+    } elseif ($category == "home") {
+        $categoryID = 5;
+    } elseif ($category == "lifestyle") {
+        $categoryID = 6;
+    } elseif ($category == "media") {
+        $categoryID = 7;
+    } elseif ($category == "others") {
+        $categoryID = 8;
+    } elseif ($category == "vehicles") {
+        $categoryID = 9;
+    } elseif ($category == "workplace") {
+        $categoryID = 10;
+    } else {
+        $error[] = "Invalid category selected.";
+    }
     
+    // check and see if any errors are present
     if (count($error) > 0) {
         $_SESSION['errors'] = $error;
         header('Location: register.php');
         exit;
     }
-
-    // CONVERT Category to CategoryID 
-
 }
-
 
 /* TODO #3: If everything looks good, make the appropriate call to insert
             data into the database. */
 
 // create a SQL query
-// make an auctionID
-// do a lookup to get the sellerID
-// need to add auctionTitle to the AuctionsTable
 
-$sqlQuery = "INSERT INTO Auctions (sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime)";
-$sqlQuery = $sqlQuery . "VALUES () ";
+// use default image file name (NEED TO UPDATE THIS LATER)
+$imageFileName = "default.jpg";
 
-    // $auctionTitle = trim($_POST["auctionTitle"] ?? "");
-    // $auctionDetails = trim($_POST["auctionDetails"] ?? "");
-    // $category = $_POST["auctionCategory"] ?? "";
-    // $startingPrice = $_POST["auctionStartPrice"] ?? 0;
-    // $reservePrice = ($_POST["auctionReservePrice"] ?? NULL);
-    // $endTime = $_POST["auctionEndDate"] ?? "";
+// find sellerID
+$sellerIDQuery = "SELECT userID FROM Users WHERE username='$sellerName'";
+$sellerIDResult = mysqli_query($connection, $sellerIDQuery) or die("Error making select sellerID query".mysql_error());
+$sellerIDRow = mysqli_fetch_array($sellerIDResult);
+$sellerID = $sellerIDRow["userID"];
 
+// convert start time and end time into correct format for database
+$currentTime = time();
+$currentTime = date('Y-m-d H:i:s',$currentTime);
+$endTime = $endTime . ":00";
+
+$sqlQuery = "INSERT INTO Auctions (sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$sellerID','$categoryID','$auctionDetails','$imageFileName','$startingPrice','$reservePrice','$startingPrice','$currentTime','$endTime')";
+
+// do the upload to the database 
+// CURRENTLY NOT WORKING, ISSUE LIES WITH UPLOADING QUERY TO THE TABLE
+mysqli_query($connection, $sqlQuery) or die("Error creating the INSERT Auction query".mysql_error());
+mysqli_close($connection);
 
 // If all is successful, let user know.
 

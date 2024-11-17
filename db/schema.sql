@@ -33,8 +33,20 @@ CREATE TABLE Categories (
 )
 ENGINE = InnoDB;
 
+INSERT INTO Categories (categoryID, categoryType) VALUES (1, 'art');
+INSERT INTO Categories (categoryID, categoryType) VALUES (2, 'electronics');
+INSERT INTO Categories (categoryID, categoryType) VALUES (3, 'fashion');
+INSERT INTO Categories (categoryID, categoryType) VALUES (4, 'health');
+INSERT INTO Categories (categoryID, categoryType) VALUES (5, 'home');
+INSERT INTO Categories (categoryID, categoryType) VALUES (6, 'lifestyle');
+INSERT INTO Categories (categoryID, categoryType) VALUES (7, 'media');
+INSERT INTO Categories (categoryID, categoryType) VALUES (8, 'others');
+INSERT INTO Categories (categoryID, categoryType) VALUES (9, 'vehicles');
+INSERT INTO Categories (categoryID, categoryType) VALUES (10, 'workplace');
+
 CREATE TABLE Auctions (
     auctionID INT AUTO_INCREMENT PRIMARY KEY,
+    auctionTitle VARCHAR(50) NOT NULL,
     sellerID INT NOT NULL,
     categoryID INT NOT NULL,
     FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
