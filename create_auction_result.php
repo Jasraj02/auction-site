@@ -29,17 +29,6 @@ function decimalPlaces($numberGiven) {
     return $dp;
 }
 
-// function to print any errors picked up (helps when debugging)
-function errorPrinter($errorList) {
-    if (count($errorList) === 0) {
-        echo "No errors";
-    } else {
-        foreach($errorList as $indError) {
-            echo "$indError";
-        }
-    }
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // first get all the form results
@@ -52,74 +41,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $sellerName = $_SESSION["username"];
 
-    $error = [];
+    $errorAuction = [];
 
     // error checks for auction title
     $genericTitles = ["Item", "Auction", "Product", "For Sale"];
     if (empty($auctionTitle)) {
-        $error[] = "Auction title required";
+        $errorAuction[] = "Auction title required";
     } elseif (strlen($auctionTitle) > 50) {
-        $error[] = "Auction title cannot be longer than 50 characters.";
+        $errorAuction[] = "Auction title cannot be longer than 50 characters.";
     } elseif (strlen($auctionTitle) < 5) {
-        $error[] = "Auction title must be longer than 5 characters.";
+        $errorAuction[] = "Auction title must be longer than 5 characters.";
     } elseif (in_array($auctionTitle,$genericTitles)) {
-        $error[] = "Auction title must not be generic.";
+        $errorAuction[] = "Auction title must not be generic.";
     } elseif (strip_tags($auctionTitle) !== $auctionTitle) {
-        $error[] = "Invalid characters present in Auction Title.";
+        $errorAuction[] = "Invalid characters present in Auction Title.";
     }
 
     // error checks for auction detail box 
     if (strlen($auctionDetails) > 250) {
-        $error[] = "Auction description cannot be longer than 250 characters.";
+        $errorAuction[] = "Auction description cannot be longer than 250 characters.";
     } elseif (strip_tags($auctionDetails) !== $auctionDetails) {
-        $error[] = "Auction description contains invalid characters.";
+        $errorAuction[] = "Auction description contains invalid characters.";
     }
 
     // error checks for Category
     if (empty($category)) {
-        $error[] = "Auction category must be chosen.";
+        $errorAuction[] = "Auction category must be chosen.";
     }
 
     // error checks for Starting Price
     if (empty($startingPrice)) {
-        $error[] = "Starting price must be given.";
+        $errorAuction[] = "Starting price must be given.";
     } elseif (!is_numeric($startingPrice)) {
-        $error[] = "Starting price must be a number.";
+        $errorAuction[] = "Starting price must be a number.";
     } 
     $startingPrice = (float)$startingPrice ;
     if ($startingPrice < 0) {
-        $error[] = "Starting price must be a postive number.";
+        $errorAuction[] = "Starting price must be a postive number.";
     } elseif (decimalPlaces($startingPrice) > 2) {
-        $error[] = "Starting price must have a maximum of 2 decimal places.";
+        $errorAuction[] = "Starting price must have a maximum of 2 decimal places.";
     }
 
     // error checks for Reserve Price
     if (!($reservePrice == NULL)) {
         // run error checking only if reserve price is given
         if (!is_numeric($reservePrice)) {
-            $error[] = "Reserve price must be a number.";
+            $errorAuction[] = "Reserve price must be a number.";
         }
         $reservePrice = (float)$reservePrice ;
         if ($reservePrice <= 0) {
-            $error[] = "Reserve price must be a postive number.";
-        } elseif ($reservePrice > $startingPrice) {
-            $error[] = "Reserve price must be smaller than Starting price.";
+            $errorAuction[] = "Reserve price must be a postive number above zero.";
+        } elseif ($reservePrice < $startingPrice) {
+            $errorAuction[] = "Reserve price must be larger than Starting price.";
         } elseif (decimalPlaces($reservePrice) > 2) {
-            $error[] = "Reserve price must have a maximum of 2 decimal places.";
+            $errorAuction[] = "Reserve price must have a maximum of 2 decimal places.";
         }
-    else {
+    } else {
         $reservePrice = $startingPrice;
-    }
     }
 
     // error checks for End Time 
     if (empty($endTime)) {
-        $error[] = "End date for the auction must be given.";
+        $errorAuction[] = "End date for the auction must be given.";
     } 
+    $oldEndTime = $endTime;
     $endTime = str_replace("T"," ", $endTime);
 
     if (time() >= strtotime($endTime)) {
-        $error[] = "End date must be in the future.";
+        $errorAuction[] = "End date must be in the future.";
     }
 
     // convert category to categoryID 
@@ -144,21 +133,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($category == "workplace") {
         $categoryID = 10;
     } else {
-        $error[] = "Invalid category selected.";
+        $errorAuction[] = "Invalid category selected.";
     }
     
+    // save all variables inputted so far into the session
+    $userAuctionInputs = [];
+    $userAuctionInputs["title"] = htmlspecialchars($auctionTitle);
+    $userAuctionInputs["details"] = htmlspecialchars($auctionDetails);
+    $userAuctionInputs["category"] = htmlspecialchars($category);
+    $userAuctionInputs["startingPrice"] = $startingPrice;
+    $userAuctionInputs["reservePrice"] = $reservePrice;
+    $userAuctionInputs["endTime"] = $oldEndTime;
+
     // check and see if any errors are present
-    if (count($error) > 0) {
-        $_SESSION['errors'] = $error;
-        header('Location: register.php');
+    if (count($errorAuction) > 0) {
+        $_SESSION["auctionErrors"] = $errorAuction;
+        $_SESSION["auctionInputs"] = $userAuctionInputs;
+        // RUN BELOW LINE WHEN AUCTION FAILS (BEST TO LINK BACK TO CREATE AUCTIONS PAGE)
+        header('Location: create_auction.php');
         exit;
+    }
+    else {
+        $_SESSION["auctionErrors"] = [];
     }
 }
 
 /* TODO #3: If everything looks good, make the appropriate call to insert
             data into the database. */
 
-// create a SQL query
 
 // use default image file name (NEED TO UPDATE THIS LATER)
 $imageFileName = "default.jpg";
@@ -167,27 +169,34 @@ $imageFileName = "default.jpg";
 $sellerIDQuery = "SELECT userID FROM Users WHERE username='$sellerName'";
 $sellerIDResult = mysqli_query($connection, $sellerIDQuery) or die("Error making select sellerID query".mysql_error());
 $sellerIDRow = mysqli_fetch_array($sellerIDResult);
-$sellerID = $sellerIDRow["userID"];
+$sellerID = (int)$sellerIDRow["userID"];
 
 // convert start time and end time into correct format for database
 $currentTime = time();
 $currentTime = date('Y-m-d H:i:s',$currentTime);
 $endTime = $endTime . ":00";
 
-$sqlQuery = "INSERT INTO Auctions (sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$sellerID','$categoryID','$auctionDetails','$imageFileName','$startingPrice','$reservePrice','$startingPrice','$currentTime','$endTime')";
+// prevent SQL injection 
+$auctionTitle = mysqli_real_escape_string($connection, $auctionTitle);
+$auctionDetails = mysqli_real_escape_string($connection, $auctionDetails);
+$imageFileName = mysqli_real_escape_string($connection, $imageFileName);
+
+$sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails','$imageFileName',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
 
 // do the upload to the database 
-// CURRENTLY NOT WORKING, ISSUE LIES WITH UPLOADING QUERY TO THE TABLE
-mysqli_query($connection, $sqlQuery) or die("Error creating the INSERT Auction query".mysql_error());
+mysqli_query($connection, $sqlQuery) or die("Error creating the INSERT Auction query".mysql_error($connection));
 mysqli_close($connection);
+
+// clear user input and errors as upload is successful
+$userAuctionInputs = [];
+$_SESSION["auctionInputs"] = $userAuctionInputs;
 
 // If all is successful, let user know.
 
-// MAKE SURE TO CHANGE THE FIX ME PART 
+// MAKE SURE TO CHANGE THE FIX ME PART AFTER COMPLETING THE LISTING PART
 // may need to use a GET request to change the url to the auction URL page
 // will need to make changes to listing.php
 echo('<div class="text-center">Auction successfully created! <a href="FIXME">View your new listing.</a></div>');
-
 
 ?>
 
