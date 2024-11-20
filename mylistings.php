@@ -7,8 +7,7 @@
     <h2 class="my-3">My Listings</h2>
 
     <?php
-
-    //check if user is logged in
+    // Ensure the user is logged in
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         echo '<div class="alert alert-danger">You must be logged in to view your listings. Redirecting to the login page...</div>';
         header("refresh:2;url=index.php");
@@ -19,14 +18,14 @@
     $username = $_SESSION['username'] ?? 'Unknown User';
     $userRole = $_SESSION['account_type'] ?? 'Unknown Role';
 
-    //ensure user has seller privileges
+    // Ensure the user has seller privileges
     if ($userRole !== 'seller' && $userRole !== 'both') {
         echo '<div class="alert alert-warning">You do not have the necessary privileges to view this page. Only sellers can view their listings.</div>';
         include_once("footer.php");
         exit();
     }
 
-    //retrieve userID from username
+    // Retrieve user ID based on username
     $userIDQuery = "SELECT userID FROM users WHERE username = '$username'";
     $userIDResult = mysqli_query($connection, $userIDQuery);
     if ($userIDResult && $userIDRow = mysqli_fetch_assoc($userIDResult)) {
@@ -37,30 +36,31 @@
         exit();
     }
 
-    //defaut for sorting order
+    // Sorting and pagination setup
     $ordering = $_GET['order_by'] ?? 'date';
-
-    //default for pagination
     $resultsPerPage = 10;
     $curr_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $offset = ($curr_page - 1) * $resultsPerPage;
 
-    //query for user listings
+    // Base query for retrieving listings
     $searchQuery = "
-        SELECT Auctions.*, COUNT(Bids.bidID) AS numberBids
+        SELECT Auctions.auctionID, Auctions.auctionTitle, Auctions.auctionDescription, 
+               Auctions.startingPrice, Auctions.endTime, 
+               COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) AS currentPrice, 
+               COUNT(Bids.bidID) AS numberBids
         FROM Auctions
         LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
         WHERE Auctions.sellerID = $userID
         GROUP BY Auctions.auctionID
     ";
 
-    //sorting logic
+    // Sorting logic
     switch ($ordering) {
         case 'priceLowToHigh':
-            $searchQuery .= " ORDER BY COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) ASC, Auctions.auctionTitle ASC";
+            $searchQuery .= " ORDER BY currentPrice ASC, Auctions.auctionTitle ASC";
             break;
         case 'priceHighToLow':
-            $searchQuery .= " ORDER BY COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) DESC, Auctions.auctionTitle ASC";
+            $searchQuery .= " ORDER BY currentPrice DESC, Auctions.auctionTitle ASC";
             break;
         case 'popularityByBids':
             $searchQuery .= " ORDER BY numberBids DESC, Auctions.auctionTitle ASC";
@@ -71,12 +71,12 @@
             break;
     }
 
-    //pagination logic
+    // Pagination logic
     $searchQuery .= " LIMIT $resultsPerPage OFFSET $offset";
 
     $searchResult = mysqli_query($connection, $searchQuery);
 
-    //total listings for pagination
+    // Total listings for pagination
     $paginationQuery = "
         SELECT COUNT(*) AS totalListings
         FROM Auctions
@@ -85,7 +85,6 @@
     $paginationResult = mysqli_query($connection, $paginationQuery);
     $totalListings = mysqli_fetch_assoc($paginationResult)['totalListings'];
     $max_page = ceil($totalListings / $resultsPerPage);
-
     ?>
 
     <div class="mb-3">
@@ -99,14 +98,14 @@
     </div>
 
     <?php
-    //display listing
+    // Display listings
     if ($searchResult && mysqli_num_rows($searchResult) > 0) {
         echo '<ul class="list-group">';
         while ($row = mysqli_fetch_assoc($searchResult)) {
-            $currentPrice = $row['currentPrice'] ?? $row['startingPrice'];
+            $currentPrice = $row['currentPrice'];
             $endDate = new DateTime($row['endTime']);
 
-            //function from utilities.php to display each listing
+            // Function from utilities.php to display each listing
             print_listing_li(
                 $row['auctionID'],
                 $row['auctionTitle'],
@@ -120,9 +119,8 @@
     } else {
         echo '<div class="alert alert-info">You have no active listings.</div>';
     }
-
-
     ?>
+
     <nav aria-label="Search results pages" class="mt-5">
         <ul class="pagination justify-content-center">
             <?php
