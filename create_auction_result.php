@@ -135,6 +135,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errorAuction[] = "Invalid category selected.";
     }
     
+    // perform error checks for Image (check image name for correct fileformat)
+    if (isset($_FILES['imageFile']) && $_FILES['imageFile']['error'] === UPLOAD_ERR_OK) {
+        $imageFileName = $_FILES['imageFile']['name'];
+        $imageLocation = $_FILES['imageFile']['tmp_name'];
+        $imageSize = $_FILES['imageFile']['size'];
+        $imageType = $_FILES['imageFile']['type'];
+        
+        // make sure file type is correct (only want jpeg, jpg or png)
+        $allowedTypes = ['image/jpeg', 'image/png','image/jpg'];
+        if (!in_array($imageType, $allowedTypes)) {
+            $errorAuction[] = "Invalid image format. Only JPG and PNG are allowed.";
+        }
+        // ensure image is not too large 
+        if ($imageSize >= 16777215) {
+            $errorAuction[] = "File uploaded is too large. Upper limit is 16 Mb.";
+        }
+
+        $imageData = file_get_contents($imageLocation);
+
+    } else if (!isset($_FILES['imageFile'])) {
+        $imageFileName = NULL;
+    } 
+    else {
+        $errorAuction[] = "An unknown error occurred.";
+    }
+
+
     // save all variables inputted so far into the session
     $userAuctionInputs = [];
     $userAuctionInputs["title"] = htmlspecialchars($auctionTitle);
@@ -143,6 +170,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userAuctionInputs["startingPrice"] = $startingPrice;
     $userAuctionInputs["reservePrice"] = $reservePrice;
     $userAuctionInputs["endTime"] = $oldEndTime;
+
+    // SAVE IMAGE TO MEDIUMBLOB FORMAT SO THAT IT CAN BE PUT INTO THE DATABASE
 
     // check and see if any errors are present
     if (count($errorAuction) > 0) {
@@ -161,9 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             data into the database. */
 
 
-// use default image file name (NEED TO UPDATE THIS LATER)
-$imageFileName = "default.jpg";
-
 // find sellerID
 $sellerIDQuery = "SELECT userID FROM Users WHERE username='$sellerName'";
 $sellerIDResult = mysqli_query($connection, $sellerIDQuery) or die("Error making select sellerID query".mysql_error());
@@ -178,7 +204,17 @@ $endTime = $endTime . ":00";
 // prevent SQL injection 
 $auctionTitle = mysqli_real_escape_string($connection, $auctionTitle);
 $auctionDetails = mysqli_real_escape_string($connection, $auctionDetails);
-$imageFileName = mysqli_real_escape_string($connection, $imageFileName);
+
+if (isset($imageFileName)) {
+    $imageFileName = mysqli_real_escape_string($connection, $imageFileName);
+}
+
+
+// UPLOAD IMAGE FIRST AND GET THE imageID so that you can add it to the Auction table
+// UPLOAD IMAGEDATA AND IMAGE FILENAME INTO Image table first, take imageID and place reference into the Auction table
+// MAKE APPROPRIATE CHECKS TO SEE IF NO IMAGE HAS BEEN UPLOADED
+
+
 
 $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails','$imageFileName',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
 

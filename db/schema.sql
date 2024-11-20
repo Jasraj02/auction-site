@@ -149,3 +149,12 @@ CREATE TABLE Recommendations (
     recommendationScore DECIMAL(3, 2) NOT NULL
 )
 ENGINE = InnoDB;
+
+CREATE TABLE Images (
+    imageID INT AUTO_INCREMENT PRIMARY KEY,
+    imageFileName VARCHAR(250) NOT
+    auctionID INT NOT NULL,
+    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
+    imageFile MEDIUMBLOB NOT NULL
+)
+ENGINE = InnoDB;
