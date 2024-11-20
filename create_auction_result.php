@@ -1,4 +1,3 @@
-
 <?php include_once("header.php")?>
 
 <div class="container my-5">
@@ -233,6 +232,9 @@ $_SESSION["auctionInputs"] = $userAuctionInputs;
 
 // If all is successful, let user know.
 
+// MAKE SURE TO CHANGE THE FIX ME PART AFTER COMPLETING THE LISTING PART
+// may need to use a GET request to change the url to the auction URL page
+// will need to make changes to listing.php
 echo('<div class="text-center">Auction successfully created! <a href="mylistings.php">View all your listings.</a></div>');
 
 ?>
