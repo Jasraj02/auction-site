@@ -9,7 +9,7 @@
     <?php
     // Ensure the user is logged in
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-        echo '<div class="alert alert-danger">You must be logged in to view your listings. Redirecting to the login page...</div>';
+        echo '<div class="alert alert-danger">You must be logged in to view your listings. Redirecting to browse...</div>';
         header("refresh:2;url=index.php");
         include_once("footer.php");
         exit();
