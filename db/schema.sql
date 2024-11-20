@@ -44,6 +44,14 @@ INSERT INTO Categories (categoryID, categoryType) VALUES (8, 'others');
 INSERT INTO Categories (categoryID, categoryType) VALUES (9, 'vehicles');
 INSERT INTO Categories (categoryID, categoryType) VALUES (10, 'workplace');
 
+CREATE TABLE Images (
+    imageID INT AUTO_INCREMENT PRIMARY KEY,
+    imageFileName VARCHAR(250) NOT NULL,
+    imageFile MEDIUMBLOB NOT NULL
+)
+ENGINE = InnoDB;
+
+
 CREATE TABLE Auctions (
     auctionID INT AUTO_INCREMENT PRIMARY KEY,
     auctionTitle VARCHAR(50) NOT NULL,
@@ -52,7 +60,8 @@ CREATE TABLE Auctions (
     FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
     FOREIGN KEY (categoryID) REFERENCES Categories(categoryID),
     auctionDescription VARCHAR(250) NOT NULL, 
-    imageFileName VARCHAR(250) NOT NULL, 
+    imageID INT,
+    FOREIGN KEY (imageID) REFERENCES Images(imageID),
     startingPrice DECIMAL(10, 2) NOT NULL,
     reservePrice DECIMAL(10, 2) NOT NULL,
     currentPrice DECIMAL(10, 2) NOT NULL,
@@ -150,11 +159,4 @@ CREATE TABLE Recommendations (
 )
 ENGINE = InnoDB;
 
-CREATE TABLE Images (
-    imageID INT AUTO_INCREMENT PRIMARY KEY,
-    imageFileName VARCHAR(250) NOT
-    auctionID INT NOT NULL,
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
-    imageFile MEDIUMBLOB NOT NULL
-)
-ENGINE = InnoDB;
+

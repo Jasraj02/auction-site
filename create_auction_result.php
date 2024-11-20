@@ -205,18 +205,23 @@ $endTime = $endTime . ":00";
 $auctionTitle = mysqli_real_escape_string($connection, $auctionTitle);
 $auctionDetails = mysqli_real_escape_string($connection, $auctionDetails);
 
-if (isset($imageFileName)) {
-    $imageFileName = mysqli_real_escape_string($connection, $imageFileName);
-}
-
-
 // UPLOAD IMAGE FIRST AND GET THE imageID so that you can add it to the Auction table
 // UPLOAD IMAGEDATA AND IMAGE FILENAME INTO Image table first, take imageID and place reference into the Auction table
 // MAKE APPROPRIATE CHECKS TO SEE IF NO IMAGE HAS BEEN UPLOADED
 
 
+// upload image to database
+if (isset($imageFileName)){
+    $imageFileName = mysqli_real_escape_string($connection, $imageFileName);
+    $imageData = mysqli_real_escape_string($connection,$imageData);
+    $imgSQLQuery = "INSERT INTO Images (imageFileName,imageFile) VALUES ('$imageFileName','$imageData')";
+    mysqli_query($connection, $imgSQLQuery) or die("Error creating the INSERT Image query".mysql_error($connection));
+    $imageID = mysqli_insert_id($connection);
+} else {
+    $imageID = NULL;
+}
 
-$sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails','$imageFileName',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
+$sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,imageID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime',$imageID);";
 
 // do the upload to the database 
 mysqli_query($connection, $sqlQuery) or die("Error creating the INSERT Auction query".mysql_error($connection));
@@ -228,10 +233,7 @@ $_SESSION["auctionInputs"] = $userAuctionInputs;
 
 // If all is successful, let user know.
 
-// MAKE SURE TO CHANGE THE FIX ME PART AFTER COMPLETING THE LISTING PART
-// may need to use a GET request to change the url to the auction URL page
-// will need to make changes to listing.php
-echo('<div class="text-center">Auction successfully created! <a href="FIXME">View your new listing.</a></div>');
+echo('<div class="text-center">Auction successfully created! <a href="mylistings.php">View all your listings.</a></div>');
 
 ?>
 
