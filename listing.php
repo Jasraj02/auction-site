@@ -4,6 +4,8 @@
 <?php
   // Get info from the URL:
   $item_id = $_GET['item_id'];
+  // https://stackoverflow.com/questions/1283327/how-to-get-url-of-current-page-in-php
+  $current_url = $_SERVER['REQUEST_URI'];
 
   // TODO: Use item_id to make a query to the database.
 
@@ -12,7 +14,7 @@
   $description = "Description blah blah blah";
   $current_price = 30.50;
   $num_bids = 1;
-  $end_time = new DateTime('2020-11-02T00:00:00');
+  $end_time = new DateTime('2028-11-02T00:00:00');
 
   // TODO: Note: Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
@@ -75,14 +77,18 @@
 <?php else: ?>
      Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
     <p class="lead">Current bid: £<?php echo(number_format($current_price, 2)) ?></p>
-
     <!-- Bidding form -->
     <form method="POST" action="place_bid.php">
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">£</span>
         </div>
-	    <input type="number" class="form-control" id="bid">
+      <!-- Moodle  Moodle  Code examples from slides  createNewUser.php -->
+      <!-- https://stackoverflow.com/questions/4598779/post-extra-values-in-an-html-form -->
+      <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
+      <input type="hidden" name="user_email", value=<?php echo $_SESSION['user_email'] ?>>    
+	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
+      <input type="number" name="bid" class="form-control" id="bid">
       </div>
       <button type="submit" class="btn btn-primary form-control">Place bid</button>
     </form>
