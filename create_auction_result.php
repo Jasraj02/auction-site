@@ -194,7 +194,7 @@ $_SESSION["auctionInputs"] = $userAuctionInputs;
 // MAKE SURE TO CHANGE THE FIX ME PART AFTER COMPLETING THE LISTING PART
 // may need to use a GET request to change the url to the auction URL page
 // will need to make changes to listing.php
-echo('<div class="text-center">Auction successfully created! <a href="FIXME">View your new listing.</a></div>');
+echo('<div class="text-center">Auction successfully created! <a href="mylistings.php">View all your listings.</a></div>');
 
 ?>
 
