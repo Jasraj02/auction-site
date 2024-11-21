@@ -149,3 +149,11 @@ CREATE TABLE Recommendations (
     recommendationScore DECIMAL(3, 2) NOT NULL
 )
 ENGINE = InnoDB;
+
+CREATE TABLE BuyerPreferences (
+    buyerID INT NOT NULL,
+    categoryID INT NOT NULL,
+    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
+    FOREIGN KEY (categoryID) REFERENCES Categories(categoryID)
+)
+ENGINE = InnoDB;

@@ -1,25 +1,37 @@
-<?php include_once("header.php")?>
-<?php require("utilities.php")?>
+<?php include_once("header.php") ?>
+<?php require("utilities.php") ?>
+<?php require_once("database.php"); ?>
 
 <?php
-  // Get info from the URL:
-  $item_id = $_GET['item_id'];
-  // https://stackoverflow.com/questions/1283327/how-to-get-url-of-current-page-in-php
-  $current_url = $_SERVER['REQUEST_URI'];
+// Get info from the URL:
+$item_id = $_GET['item_id'];
 
-  // TODO: Use item_id to make a query to the database.
 
-  // DELETEME: For now, using placeholder data.
-  $title = "Placeholder title";
-  $description = "Description blah blah blah";
-  $current_price = 30.50;
-  $num_bids = 1;
-  $end_time = new DateTime('2028-11-02T00:00:00');
+//use item_id to make a query to the database.
+$searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished
+                FROM Auctions
+                LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
+                WHERE Auctions.auctionID = $item_id";
 
-  // TODO: Note: Auctions that have ended may pull a different set of data,
+$searchQuery .= " GROUP BY Auctions.auctionID";
+
+//Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
-  //       to lack of high-enough bids. Or maybe not.
-  
+  //       to lack of high-enough bids.
+$auctionQuery = mysqli_query($connection, $searchQuery);
+if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
+    $title = $auction['auctionTitle'];
+    $description = $auction['auctionDescription'];
+    $current_price = $auction['currentPrice'] ?? $auction['startingPrice'];
+    $num_bids = $auction['numberBids'];
+    $end_time = new DateTime($auction['endTime']);
+    $Finished = $auction['Finished'];
+} else {
+    echo "<div class='alert alert-danger'>Error accessing auction details.</div>";
+    include_once("footer.php");
+    exit();
+}
+
   // Calculate time to auction end:
   $now = new DateTime();
   
@@ -27,14 +39,22 @@
     $time_to_end = date_diff($now, $end_time);
     $time_remaining = ' (in ' . display_time_remaining($time_to_end) . ')';
   }
-  
-  // TODO: If the user has a session, use it to make a query to the database
-  //       to determine if the user is already watching this item.
-  //       For now, this is hardcoded.
-  $has_session = true;
-  $watching = false;
-?>
 
+//check if user is logged in and watching the item
+$has_session = true;
+$watching = false;
+
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+    $buyer_id = $_SESSION['buyerID'] ?? null;
+
+    if ($buyer_id) {
+        $get_watchlist = "SELECT * FROM watchlist WHERE auctionID = '$item_id' AND buyerID = $buyer_id";
+        $watchlistResult = mysqli_query($connection, $get_watchlist);
+
+        $watching = $watchlistResult && mysqli_num_rows($watchlistResult) > 0;
+    }
+}
+?>
 
 <div class="container">
 
@@ -43,11 +63,9 @@
     <h2 class="my-3"><?php echo($title); ?></h2>
   </div>
   <div class="col-sm-4 align-self-center"> <!-- Right col -->
-<?php
-  /* The following watchlist functionality uses JavaScript, but could
-     just as easily use PHP as in other places in the code */
-  if ($now < $end_time):
-?>
+<?php 
+
+  if (!$Finished): ?>
     <div id="watch_nowatch" <?php if ($has_session && $watching) echo('style="display: none"');?> >
       <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addToWatchlist()">+ Add to watchlist</button>
     </div>
@@ -71,24 +89,30 @@
   <div class="col-sm-4"> <!-- Right col with bidding info -->
 
     <p>
-<?php if ($now > $end_time): ?>
-     This auction ended <?php echo(date_format($end_time, 'j M H:i')) ?>
-     <!-- TODO: Print the result of the auction here? -->
+
+  <?php  //Auctions that have ended may pull a different set of data,
+  //       like whether the auction ended in a sale or was cancelled due
+  //       to lack of high-enough bids   **add ability to cancel and view expired auctions***
+ if ($Finished): ?>
+    This auction ended on <?php echo(date_format($end_time, 'j M H:i')) ?>
+    <?php if ($auction['status'] === 'completed'): ?>
+      Winning bid: £<?php echo(number_format($current_price, 2)); ?>
+    <?php elseif ($auction['status'] === 'unsuccessful'): ?>
+        The reserve price was not met.
+    <?php elseif ($auction['status'] === 'cancelled'): ?>
+        The auction was cancelled.
+    <?php endif; ?>
 <?php else: ?>
      Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
     <p class="lead">Current bid: £<?php echo(number_format($current_price, 2)) ?></p>
+
     <!-- Bidding form -->
     <form method="POST" action="place_bid.php">
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">£</span>
         </div>
-      <!-- Moodle  Moodle  Code examples from slides  createNewUser.php -->
-      <!-- https://stackoverflow.com/questions/4598779/post-extra-values-in-an-html-form -->
-      <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
-      <input type="hidden" name="user_email", value=<?php echo $_SESSION['user_email'] ?>>    
-	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
-      <input type="number" name="bid" class="form-control" id="bid">
+	    <input type="number" class="form-control" id="bid">
       </div>
       <button type="submit" class="btn btn-primary form-control">Place bid</button>
     </form>
