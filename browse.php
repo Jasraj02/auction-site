@@ -118,7 +118,7 @@ $searchQuery = "SELECT Auctions.*, Auctions.auctionTitle, MAX(Bids.bidPrice) as 
                 WHERE Auctions.endTime>CURRENT_TIMESTAMP()";
 
 if (!empty($keyword)) {
-  $searchQuery .= " AND (Auctions.auctionTitleLIKE '%$keyword%')";
+  $searchQuery .= " AND (Auctions.auctionTitle LIKE '%$keyword%')";
 }
 if ($category != 'all') {
   $searchQuery .= " AND Auctions.categoryID = '$category'";
