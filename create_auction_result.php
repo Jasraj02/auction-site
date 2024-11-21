@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // error checks for auction detail box 
-    if (strlen($auctionDetails) > 250) {
-        $errorAuction[] = "Auction description cannot be longer than 250 characters.";
+    if (strlen($auctionDetails) > 100) {
+        $errorAuction[] = "Auction description cannot be longer than 100 characters.";
     } elseif (strip_tags($auctionDetails) !== $auctionDetails) {
         $errorAuction[] = "Auction description contains invalid characters.";
     }
