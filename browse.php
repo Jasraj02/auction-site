@@ -112,13 +112,13 @@ if (!isset($_GET['page'])) {
 }
 
 //query to retrieve data from the database
-$searchQuery = "SELECT Auctions.*,  MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids
+$searchQuery = "SELECT Auctions.*, Auctions.auctionTitle, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids
                 FROM Auctions
                 LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
                 WHERE Auctions.endTime>CURRENT_TIMESTAMP()";
 
 if (!empty($keyword)) {
-  $searchQuery .= " AND (Auctions.auctionDescription LIKE '%$keyword%')";
+  $searchQuery .= " AND (Auctions.auctionTitleLIKE '%$keyword%')";
 }
 if ($category != 'all') {
   $searchQuery .= " AND Auctions.categoryID = '$category'";
@@ -129,16 +129,16 @@ $searchQuery .= " GROUP BY Auctions.auctionID";
 switch ($ordering) {
   case  'priceLowtoHigh':
   case 'priceLowToHigh':
-    $searchQuery .= " ORDER BY COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) ASC, Auctions.auctionDescription ASC";
+    $searchQuery .= " ORDER BY COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) ASC, Auctions.auctionTitle ASC";
     break;
   case 'priceHighToLow':
-    $searchQuery .= " ORDER BY COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) DESC, Auctions.auctionDescription ASC";
+    $searchQuery .= " ORDER BY COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) DESC, Auctions.auctionTitle ASC";
     break;
   case 'date':
-    $searchQuery .= " ORDER BY Auctions.endTime ASC, Auctions.auctionDescription ASC";
+    $searchQuery .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
     break;
   case 'popularityByBids':
-    $searchQuery .= " ORDER BY numberBids DESC, Auctions.auctionDescription ASC";
+    $searchQuery .= " ORDER BY numberBids DESC, Auctions.auctionTitle ASC";
     break;
 }
 
@@ -155,7 +155,7 @@ $paginationQuery = "SELECT COUNT(DISTINCT Auctions.auctionID) AS numberRows
                     WHERE Auctions.endTime>CURRENT_TIMESTAMP()";
 
 if (!empty($keyword)) {
-  $paginationQuery .= " AND (Auctions.auctionDescription LIKE '%$keyword%')";
+  $paginationQuery .= " AND (Auctions.auctionTitle LIKE '%$keyword%')";
 }
 if ($category != 'all') {
   $paginationQuery .= " AND Auctions.categoryID = '$category'";
@@ -189,7 +189,7 @@ else {
     $endDate = new DateTime($row['endTime']);
 
     //function in utilities.php
-    print_listing_li($row['auctionID'], $row['auctionDescription'], substr($row['auctionDescription'], 0, 200) . '...',
+    print_listing_li($row['auctionID'], $row['auctionTitle'], substr($row['auctionDescription'], 0, 200) . '...',
       $currentPrice, $row['numberBids'], $endDate); }
 }
 ?>
