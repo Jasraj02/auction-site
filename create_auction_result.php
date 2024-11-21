@@ -151,10 +151,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $imageData = file_get_contents($imageLocation);
 
-    } else if (!isset($_FILES['imageFile'])) {
+    } else if (empty($_FILES['imageFile']['name'])) {
         $imageFileName = NULL;
-    } 
-    else {
+        $imageData = NULL;
+    } else {
         $errorAuction[] = "An unknown error occurred.";
     }
 
@@ -206,7 +206,6 @@ $auctionDetails = mysqli_real_escape_string($connection, $auctionDetails);
 // UPLOAD IMAGEDATA AND IMAGE FILENAME INTO Image table first, take imageID and place reference into the Auction table
 // MAKE APPROPRIATE CHECKS TO SEE IF NO IMAGE HAS BEEN UPLOADED
 
-
 // upload image to database
 if (isset($imageFileName)){
     $imageFileName = mysqli_real_escape_string($connection, $imageFileName);
@@ -214,11 +213,12 @@ if (isset($imageFileName)){
     $imgSQLQuery = "INSERT INTO Images (imageFileName,imageFile) VALUES ('$imageFileName','$imageData')";
     mysqli_query($connection, $imgSQLQuery) or die("Error creating the INSERT Image query".mysql_error($connection));
     $imageID = mysqli_insert_id($connection);
-} else {
-    $imageID = NULL;
-}
 
-$sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,imageID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime',$imageID);";
+    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,imageID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime',$imageID);";
+
+} else {
+    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
+}
 
 // do the upload to the database 
 mysqli_query($connection, $sqlQuery) or die("Error creating the INSERT Auction query".mysql_error($connection));

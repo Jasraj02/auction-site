@@ -26,6 +26,22 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $num_bids = $auction['numberBids'];
     $end_time = new DateTime($auction['endTime']);
     $Finished = $auction['Finished'];
+    $imageID = $auction['imageID'];
+    
+    if (isset($imageID)) {
+      $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
+      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysql_error());
+
+      if ($imageDataResult && $imageDataRow = mysqli_fetch_assoc($imageDataResult)) {
+        $imageData = base64_encode($imageDataRow['imageFile']);
+    } else {
+        $imageData = NULL;
+    }
+    }
+    else {
+      $imageData = NULL;
+    }
+
 } else {
     echo "<div class='alert alert-danger'>Error accessing auction details.</div>";
     include_once("footer.php");
@@ -78,11 +94,19 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 </div>
 
 <div class="row"> <!-- Row #2 with auction description + bidding info -->
+  
   <div class="col-sm-8"> <!-- Left col with item info -->
 
-    <div class="itemDescription">
-    <?php echo($description); ?>
-    </div>
+  <div class="itemDescription">
+    <?php 
+    if ($imageData): ?>
+        <img src="data:image/jpeg;base64,<?php echo $imageData; ?>" alt="Auction Image" style="max-width: 100%; height: auto;">
+    <?php else: ?>
+        <p>No image available for this auction.</p>
+    <?php endif; ?>
+
+    <p><?php echo($description); ?></p>
+</div>
 
   </div>
 
