@@ -25,11 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['logged_in'] = true;
         $usernameQuery = "SELECT username FROM users WHERE email = '$email'";
         $usernameResult = mysqli_query($connection, $usernameQuery);
-        $usernameResultRow = mysqli_fetch_array($usernameResult);  
+        $usernameResultRow = mysqli_fetch_array($usernameResult); 
+        $userIDQuery = "SELECT userID FROM users WHERE email = '$email'";
+        $userIDResult = mysqli_query($connection, $userIDQuery);
+        $userIDResultRow = mysqli_fetch_array($userIDResult); 
         $accountTypeQuery = "SELECT userRole FROM users WHERE email = '$email'";
         $accountTypeResult = mysqli_query($connection, $accountTypeQuery);
         $accountTypeResultRow = mysqli_fetch_array($accountTypeResult);      
-        $_SESSION['username'] = $usernameResultRow['username'];     
+        $_SESSION['username'] = $usernameResultRow['username'];  
+        $_SESSION['userID'] = $userIDResultRow['userID'];   
         $_SESSION['account_type'] = $accountTypeResultRow['userRole'];   
         echo('<div class="text-center">You are now logged in! You will be redirected shortly!</div>');
         // Redirect to index after 2 seconds
