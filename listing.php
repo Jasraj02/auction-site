@@ -5,7 +5,8 @@
 <?php
 // Get info from the URL:
 $item_id = $_GET['item_id'];
-
+// https://stackoverflow.com/questions/1283327/how-to-get-url-of-current-page-in-php
+$current_url = $_SERVER['REQUEST_URI'];
 
 //use item_id to make a query to the database.
 $searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished
@@ -112,7 +113,11 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
         <div class="input-group-prepend">
           <span class="input-group-text">£</span>
         </div>
-	    <input type="number" class="form-control" id="bid">
+      <!-- https://stackoverflow.com/questions/4598779/post-extra-values-in-an-html-form -->
+      <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
+      <input type="hidden" name="user_id", value=<?php echo $_SESSION['userID'] ?>>    
+	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
+	    <input type="number" name="bid", class="form-control" id="bid">
       </div>
       <button type="submit" class="btn btn-primary form-control">Place bid</button>
     </form>

@@ -4,7 +4,7 @@
 // Notify user of success/failure and redirect/give navigation options.
 $bid_price = $_POST["bid"];
 $item_id = $_POST["item_id"];
-$user_email = $_POST['user_email'];
+$user_id = $_POST['user_id'];
 $previous_url = $_POST['previous_url'];
 $query = "SELECT * FROM Auctions WHERE auctionID = $item_id";
 $result = mysqli_query($connection, $query) or die("Error making query to database.");
@@ -18,12 +18,6 @@ if ($bid_price > $current_price) {
     // https://www.w3schools.com/mysql/mysql_update.asp
     $query = "UPDATE Auctions SET currentPrice = $bid_price WHERE auctionID = $item_id";
     mysqli_query($connection, $query) or die("Error making query to database.");
-    $query = "SELECT userID FROM Users WHERE email = '$user_email'";
-    $result = mysqli_query($connection, $query) or die("Error making query to database.");
-    while ($row = $result->fetch_assoc()) {
-        // [Yan TODO]: Exception handling 
-        $user_id = $row['userID'];
-    }
     $query = "INSERT INTO Bids (buyerID, auctionID, bidPrice) VALUES ($user_id, $item_id, $bid_price)";
     mysqli_query($connection, $query) or die("Error making query to database.");
 } else {
