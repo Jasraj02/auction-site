@@ -137,8 +137,6 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 // JavaScript functions: addToWatchlist and removeFromWatchlist.
 
 function addToWatchlist(button) {
-  console.log("These print statements are helpful for debugging btw");
-
   // This performs an asynchronous call to a PHP function using POST method.
   // Sends item ID as an argument to that function.
   $.ajax('watchlist_funcs.php', {
@@ -148,7 +146,6 @@ function addToWatchlist(button) {
     success: 
       function (obj, textstatus) {
         // Callback function for when call is successful and returns obj
-        console.log("Success");
         var objT = obj.trim();
  
         if (objT == "success") {
@@ -156,9 +153,10 @@ function addToWatchlist(button) {
           $("#watch_watching").show();
         }
         else {
+          var failureMessage = objT;
           var mydiv = document.getElementById("watch_nowatch");
           mydiv.appendChild(document.createElement("br"));
-          mydiv.appendChild(document.createTextNode("Add to watch failed. Try again later."));
+          mydiv.appendChild(document.createTextNode("Add to watch failed.\n" + failureMessage));
         }
       },
 
@@ -180,7 +178,6 @@ function removeFromWatchlist(button) {
     success: 
       function (obj, textstatus) {
         // Callback function for when call is successful and returns obj
-        console.log("Success");
         var objT = obj.trim();
  
         if (objT == "success") {
@@ -188,9 +185,10 @@ function removeFromWatchlist(button) {
           $("#watch_nowatch").show();
         }
         else {
+          var failureMessage = objT;
           var mydiv = document.getElementById("watch_watching");
           mydiv.appendChild(document.createElement("br"));
-          mydiv.appendChild(document.createTextNode("Watch removal failed. Try again later."));
+          mydiv.appendChild(document.createTextNode("Watch removal failed.\n" + failureMessage));
         }
       },
 
