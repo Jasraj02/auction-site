@@ -50,7 +50,7 @@ errorConstructor($auctionErrors);
       before they try to send it, but that kind of functionality should be
       extremely low-priority / only done after all database functions are
       complete. -->
-      <form method="post" action="./create_auction_result.php">
+      <form method="post" enctype="multipart/form-data" action="./create_auction_result.php">
         <div class="form-group row">
           <!-- added required to make sure you have to input something -->
           <label required for="auctionTitle" class="col-sm-2 col-form-label text-right">Title of auction</label>
@@ -66,6 +66,15 @@ errorConstructor($auctionErrors);
             <small id="detailsHelp" class="form-text text-muted">Full details of the listing to help bidders decide if it's what they're looking for.</small>
           </div>
         </div>
+        <div class="form-group row">
+          <label for="imageFile" class="col-sm-2 col-form-label text-right">Image</label>
+          <div class="col-sm-10">
+            <input type="file" class="form-control" name="imageFile" id="imageFile"></input>
+            <small id="detailsHelp" class="form-text text-muted">Image to show bidders what the item is.</small>
+          </div>
+        </div>
+        <!-- could add some JS code here to support multiple images being uploaded 
+        if doing this then also include in the POST request the number of images being uploaded --> 
         <div class="form-group row">
           <label for="auctionCategory" class="col-sm-2 col-form-label text-right">Category</label>
           <div class="col-sm-10">
