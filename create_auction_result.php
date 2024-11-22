@@ -4,8 +4,6 @@
 
 <?php
 
-// This function takes the form data and adds the new auction to the database.
-
 /* TODO #1: Connect to MySQL database (perhaps by requiring a file that
             already does this). */
 
@@ -56,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // error checks for auction detail box 
-    if (strlen($auctionDetails) > 250) {
-        $errorAuction[] = "Auction description cannot be longer than 250 characters.";
+    if (strlen($auctionDetails) > 100) {
+        $errorAuction[] = "Auction description cannot be longer than 100 characters.";
     } elseif (strip_tags($auctionDetails) !== $auctionDetails) {
         $errorAuction[] = "Auction description contains invalid characters.";
     }
@@ -134,6 +132,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errorAuction[] = "Invalid category selected.";
     }
     
+    // perform error checks for Image (check image name for correct fileformat)
+    if (isset($_FILES['imageFile']) && $_FILES['imageFile']['error'] === UPLOAD_ERR_OK) {
+        $imageFileName = $_FILES['imageFile']['name'];
+        $imageLocation = $_FILES['imageFile']['tmp_name'];
+        $imageSize = $_FILES['imageFile']['size'];
+        $imageType = $_FILES['imageFile']['type'];
+        
+        // make sure file type is correct (only want jpeg, jpg or png)
+        $allowedTypes = ['image/jpeg', 'image/png','image/jpg'];
+        if (!in_array($imageType, $allowedTypes)) {
+            $errorAuction[] = "Invalid image format. Only JPG and PNG are allowed.";
+        }
+        // ensure image is not too large 
+        if ($imageSize >= 16777215) {
+            $errorAuction[] = "File uploaded is too large. Upper limit is 16 Mb.";
+        }
+
+        $imageData = file_get_contents($imageLocation);
+
+    } else if (empty($_FILES['imageFile']['name'])) {
+        $imageFileName = NULL;
+        $imageData = NULL;
+    } else {
+        $errorAuction[] = "An unknown error occurred.";
+    }
+
+
     // save all variables inputted so far into the session
     $userAuctionInputs = [];
     $userAuctionInputs["title"] = htmlspecialchars($auctionTitle);
@@ -142,6 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userAuctionInputs["startingPrice"] = $startingPrice;
     $userAuctionInputs["reservePrice"] = $reservePrice;
     $userAuctionInputs["endTime"] = $oldEndTime;
+
+    // SAVE IMAGE TO MEDIUMBLOB FORMAT SO THAT IT CAN BE PUT INTO THE DATABASE
 
     // check and see if any errors are present
     if (count($errorAuction) > 0) {
@@ -160,9 +187,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             data into the database. */
 
 
-// use default image file name (NEED TO UPDATE THIS LATER)
-$imageFileName = "default.jpg";
-
 // find sellerID
 $sellerIDQuery = "SELECT userID FROM Users WHERE username='$sellerName'";
 $sellerIDResult = mysqli_query($connection, $sellerIDQuery) or die("Error making select sellerID query".mysql_error());
@@ -177,9 +201,24 @@ $endTime = $endTime . ":00";
 // prevent SQL injection 
 $auctionTitle = mysqli_real_escape_string($connection, $auctionTitle);
 $auctionDetails = mysqli_real_escape_string($connection, $auctionDetails);
-$imageFileName = mysqli_real_escape_string($connection, $imageFileName);
 
-$sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,imageFileName,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails','$imageFileName',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
+// UPLOAD IMAGE FIRST AND GET THE imageID so that you can add it to the Auction table
+// UPLOAD IMAGEDATA AND IMAGE FILENAME INTO Image table first, take imageID and place reference into the Auction table
+// MAKE APPROPRIATE CHECKS TO SEE IF NO IMAGE HAS BEEN UPLOADED
+
+// upload image to database
+if (isset($imageFileName)){
+    $imageFileName = mysqli_real_escape_string($connection, $imageFileName);
+    $imageData = mysqli_real_escape_string($connection,$imageData);
+    $imgSQLQuery = "INSERT INTO Images (imageFileName,imageFile) VALUES ('$imageFileName','$imageData')";
+    mysqli_query($connection, $imgSQLQuery) or die("Error creating the INSERT Image query".mysql_error($connection));
+    $imageID = mysqli_insert_id($connection);
+
+    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,imageID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime',$imageID);";
+
+} else {
+    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
+}
 
 // do the upload to the database 
 mysqli_query($connection, $sqlQuery) or die("Error creating the INSERT Auction query".mysql_error($connection));
