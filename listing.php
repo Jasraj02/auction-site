@@ -42,17 +42,16 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
   }
 
 //check if user is logged in and watching the item
-$has_session = true;
+$has_session = false;
 $watching = false;
 
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    $buyer_id = $_SESSION['buyerID'] ?? null;
-
+    $buyer_id = $_SESSION['userID'] ?? null;
+    $has_session = true;
     if ($buyer_id) {
-        $get_watchlist = "SELECT * FROM watchlist WHERE auctionID = '$item_id' AND buyerID = $buyer_id";
-        $watchlistResult = mysqli_query($connection, $get_watchlist);
-
-        $watching = $watchlistResult && mysqli_num_rows($watchlistResult) > 0;
+      $get_watchlist = "SELECT * FROM Watchlists WHERE auctionID = '$item_id' AND buyerID = $buyer_id";
+      $watchlistResult = mysqli_query($connection, $get_watchlist);
+      $watching = $watchlistResult && (mysqli_num_rows($watchlistResult) > 0);
     }
 }
 ?>
@@ -94,7 +93,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
   <?php  //Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
   //       to lack of high-enough bids   **add ability to cancel and view expired auctions***
- if ($Finished): ?>
+  if ($Finished): ?>
     This auction ended on <?php echo(date_format($end_time, 'j M H:i')) ?>
     <?php if ($auction['status'] === 'completed'): ?>
       Winning bid: £<?php echo(number_format($current_price, 2)); ?>
@@ -134,7 +133,6 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 
 
 <script> 
-// JavaScript functions: addToWatchlist and removeFromWatchlist.
 
 function addToWatchlist(button) {
   // This performs an asynchronous call to a PHP function using POST method.
