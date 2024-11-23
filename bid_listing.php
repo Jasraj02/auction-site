@@ -127,7 +127,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
         while ($row = $result->fetch_assoc()) {
             $username= $row['username'];
             $bid_price = $row['bidPrice'];
-            // the line below is modified fron the line for current bid in the starter code version of listing.php
+            // the line below is modified fron the line for current bid in the starter code version of listing.php (line 77)
             echo "<p>$username: £$bid_price</p>";
         }
     ?>
