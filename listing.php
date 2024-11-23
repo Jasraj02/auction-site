@@ -8,8 +8,38 @@ $item_id = $_GET['item_id'];
 // https://stackoverflow.com/questions/1283327/how-to-get-url-of-current-page-in-php
 $current_url = $_SERVER['REQUEST_URI'];
 
+//initialise view count
+$viewCount = 0;
+
+//track unique views if the user is logged in and is a buyer
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && $_SESSION['account_type'] !== 'seller') {
+  if (isset($_SESSION['userID'])) { // Check if userID is set
+    $user_id = $_SESSION['userID'];
+
+    $sellerQuery = "SELECT sellerID FROM Auctions WHERE auctionID = $item_id";
+    $sellerResult = mysqli_query($connection, $sellerQuery);
+
+      if ($sellerResult && $sellerRow = mysqli_fetch_assoc($sellerResult)) {
+          $seller_id = $sellerRow['sellerID'];
+
+      //check is user has already viewed the auction
+      //only add view if user is not the seller
+        if ($user_id !== $seller_id) {
+          $viewCheckQuery = "SELECT * FROM UserViews WHERE auctionID = $item_id AND userID = $user_id";
+          $viewResult = mysqli_query($connection, $viewCheckQuery);
+            
+          if (mysqli_num_rows($viewResult) === 0) {
+              //add new view
+              $insertViewQuery = "INSERT INTO UserViews (userID, auctionID, viewTime) VALUES ($user_id, $item_id, NOW())";
+              mysqli_query($connection, $insertViewQuery) or die("Error inserting view record: " . mysqli_error($connection));
+        }
+      }
+    }
+  }
+}
 //use item_id to make a query to the database.
-$searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished
+$searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished,
+                (SELECT COUNT(*) FROM UserViews WHERE auctionID = $item_id) AS viewCount
                 FROM Auctions
                 LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
                 WHERE Auctions.auctionID = $item_id";
@@ -29,6 +59,7 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $Finished = $auction['Finished'];
     $imageID = $auction['imageID'];
     $sellerID = $auction['sellerID'];
+    $viewCount = $auction['viewCount'];
     
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
@@ -92,6 +123,7 @@ else {
 <div class="row"> <!-- Row #1 with auction title + watch button -->
   <div class="col-sm-8"> <!-- Left col -->
     <h2 class="my-3"><?php echo($title); ?></h2>
+    <p>Views: <?php echo $viewCount; ?></p> <!-- Display view count -->
   </div>
   <div class="col-sm-4 align-self-center"> <!-- Right col -->
 <?php 
@@ -153,12 +185,14 @@ else {
         </div>
       <!-- https://stackoverflow.com/questions/4598779/post-extra-values-in-an-html-form -->
       <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
-      <input type="hidden" name="user_id", value=<?php echo $_SESSION['userID'] ?>>    
+      <?php if (isset($_SESSION['userID'])): ?>
+       <input type="hidden" name="user_id", value=<?php echo $_SESSION['userID'] ?>>    
+      <?php endif; ?>
 	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
 	    <input type="number" name="bid", class="form-control" id="bid" <?php echo($disabled);?> >
-      </div>
-      <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
-    </form>
+    </div>
+    <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
+  </form>
 <?php endif ?>
 
   
