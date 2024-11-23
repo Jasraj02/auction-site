@@ -69,6 +69,9 @@
     </li>
 	<li class="nav-item mx-1">
       <a class="nav-link" href="recommendations.php">Recommended</a>
+    </li>
+  <li class="nav-item mx-1">
+      <a class="nav-link" href="mywatchlist.php">Watchlist</a>
     </li>');
   }
   if ($accountType === 'seller') {
@@ -87,6 +90,9 @@
     </li>
 	  <li class="nav-item mx-1">
       <a class="nav-link" href="recommendations.php">Recommended</a>
+    </li>
+    <li class="nav-item mx-1">
+      <a class="nav-link" href="mywatchlist.php">Watchlist</a>
     </li>
     <li class="nav-item mx-1">
         <a class="nav-link" href="mylistings.php">My Listings</a>
