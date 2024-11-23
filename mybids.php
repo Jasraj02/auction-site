@@ -42,7 +42,8 @@
     $desc = $row["auctionDescription"];
     $price = $row["currentPrice"];
     $num_bids = $row["count"];
-    $end_time = $row["endTime"];
+    // the use of new DateTime in the following line is group member Raj Singh's suggestion. Before Raj's suggestion, the line was "$end_time = $row["endTime"];"
+    $end_time = new DateTime($row["endTime"]);
     print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time);
 }
 
