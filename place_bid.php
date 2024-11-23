@@ -28,5 +28,5 @@ echo "<br>Redirecting to previous page.";
 
 // Project Tutorial 3 PHP and MySQL, slide 31
 // https://stackoverflow.com/questions/6119451/page-redirect-after-certain-time-php
-header("refresh: 5; url=$previous_url");
+header("refresh: 2; url=$previous_url");
 ?>

@@ -127,19 +127,6 @@ CREATE TABLE UpdateProperties (
 )
 ENGINE = InnoDB;
 
-CREATE TABLE Questions (
-    questionID INT AUTO_INCREMENT PRIMARY KEY,
-    auctionID INT NOT NULL,
-    buyerID INT NOT NULL,
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
-    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
-    questionText VARCHAR(250) NOT NULL, 
-    questionTimestamp TIMESTAMP NOT NULL, 
-    responseText VARCHAR(250), 
-    responseTimestamp TIMESTAMP
-)
-ENGINE = InnoDB;
-
 CREATE TABLE Watchlists (
     buyerID INT NOT NULL,
     auctionID INT NOT NULL,
@@ -159,12 +146,16 @@ CREATE TABLE Recommendations (
 )
 ENGINE = InnoDB;
 
-CREATE TABLE BuyerPreferences (
-    buyerID INT NOT NULL,
+CREATE TABLE Preferences (
+    userID INT NOT NULL,
     categoryID INT NOT NULL,
-    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
+    FOREIGN KEY (userID) REFERENCES Users(userID),
     FOREIGN KEY (categoryID) REFERENCES Categories(categoryID)
 )
 ENGINE = InnoDB;
+
+ALTER TABLE Preferences
+ADD CONSTRAINT fk_user FOREIGN KEY (userID) REFERENCES Users(userID) ON DELETE CASCADE,
+ADD CONSTRAINT fk_category FOREIGN KEY (categoryID) REFERENCES Categories(categoryID) ON DELETE CASCADE;
 
 
