@@ -10,7 +10,7 @@
     $accountType = $_SESSION['account_type'];
   } else {
     $loggedIn = false;
-    $accountType = 'seller';
+    $accountType = 'guest';
   }
 ?>
 

@@ -57,6 +57,9 @@
           <option value="popularityByBids" <?php echo (isset($_GET['order_by']) && $_GET['order_by'] == 'popularityByBids') ? 'selected' : ''; ?>>
             Popularity: by bids
           </option> 
+          <option value="userViews" <?php echo (isset($_GET['order_by']) && $_GET['order_by'] == 'userViews') ? 'selected' : ''; ?>>
+            Popularity: by views
+          </option>
           <option value="priceHighToLow" <?php echo (isset($_GET['order_by']) && $_GET['order_by'] == 'priceHighToLow') ? 'selected' : ''; ?>>
             Price: highest first
           </option>         
@@ -66,6 +69,7 @@
           <option value="date" <?php echo (isset($_GET['order_by']) && $_GET['order_by'] == 'date') ? 'selected' : ''; ?>>
             Time: ending soonest
           </option>
+
 <?php
   //****need to add option to sort popularity by user views*****
   ?>
@@ -112,10 +116,14 @@ if (!isset($_GET['page'])) {
 }
 
 //query to retrieve data from the database
-$searchQuery = "SELECT Auctions.*, Auctions.auctionTitle, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids
-                FROM Auctions
-                LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
-                WHERE Auctions.endTime>CURRENT_TIMESTAMP()";
+$searchQuery = "
+    SELECT Auctions.*, Auctions.auctionTitle, 
+           MAX(Bids.bidPrice) as currentPrice, 
+           COUNT(Bids.bidID) as numberBids, 
+           (SELECT COUNT(*) FROM UserViews WHERE UserViews.auctionID = Auctions.auctionID) AS viewCount
+    FROM Auctions
+    LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
+    WHERE Auctions.endTime > CURRENT_TIMESTAMP()";
 
 if (!empty($keyword)) {
   $searchQuery .= " AND (Auctions.auctionTitle LIKE '%$keyword%')";
@@ -139,6 +147,9 @@ switch ($ordering) {
     break;
   case 'popularityByBids':
     $searchQuery .= " ORDER BY numberBids DESC, Auctions.auctionTitle ASC";
+    break;
+  case 'userViews':
+    $searchQuery .= " ORDER BY viewCount DESC, Auctions.auctionTitle ASC";
     break;
 }
 
@@ -187,10 +198,11 @@ else {
   while ($row = mysqli_fetch_assoc($searchResult)) {
     $currentPrice = $row['currentPrice'] ?? $row['startingPrice'];
     $endDate = new DateTime($row['endTime']);
+    $viewCount = $row['viewCount'];
 
     //function in utilities.php
     print_listing_li($row['auctionID'], $row['auctionTitle'], substr($row['auctionDescription'], 0, 200) . '...',
-      $currentPrice, $row['numberBids'], $endDate); }
+      $currentPrice, $row['numberBids'], $endDate, $viewCount); }
 }
 ?>
 </ul>

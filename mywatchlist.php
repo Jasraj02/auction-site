@@ -37,7 +37,7 @@
     }
 
     // Sorting and pagination setup
-    $ordering = $_GET['order_by'] ?? 'date';
+    $ordering = $_GET['order_by'] ?? 'popularityByBids';
     $resultsPerPage = 10;
     $curr_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $offset = ($curr_page - 1) * $resultsPerPage;
@@ -47,7 +47,8 @@
     SELECT Auctions.auctionID, Auctions.auctionTitle, Auctions.auctionDescription, 
            Auctions.startingPrice, Auctions.endTime, 
            COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) AS currentPrice, 
-           COUNT(Bids.bidID) AS numberBids
+           COUNT(Bids.bidID) AS numberBids,
+           (SELECT COUNT(*) FROM UserViews WHERE UserViews.auctionID = Auctions.auctionID) AS userViews
     FROM Auctions
     LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
     INNER JOIN Watchlists ON Watchlists.auctionID = Auctions.auctionID
@@ -65,8 +66,10 @@
         case 'popularityByBids':
             $searchQuery .= " ORDER BY numberBids DESC, Auctions.auctionTitle ASC";
             break;
+        case 'popularityByViews':
+            $searchQuery .= " ORDER BY userViews DESC, Auctions.auctionTitle ASC";
+            break;   
         case 'date':
-        default:
             $searchQuery .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
             break;
     }
@@ -91,6 +94,7 @@
         <label for="order_by" class="form-label">Sort by:</label>
         <select class="form-control" id="order_by" name="order_by" onchange="location = this.value;">
             <option value="mywatchlist.php?order_by=popularityByBids" <?= ($ordering === 'popularityByBids') ? 'selected' : '' ?>>Popularity: by bids</option>
+            <option value="mywatchlist.php?order_by=popularityByViews"<?= ($ordering === 'popularityByViews') ? 'selected' : '' ?>>Popularity: by views</option>
             <option value="mywatchlist.php?order_by=priceHighToLow" <?= ($ordering === 'priceHighToLow') ? 'selected' : '' ?>>Price: highest first</option>
             <option value="mywatchlist.php?order_by=priceLowToHigh" <?= ($ordering === 'priceLowToHigh') ? 'selected' : '' ?>>Price: lowest first</option>
             <option value="mywatchlist.php?order_by=date" <?= ($ordering === 'date') ? 'selected' : '' ?>>Time: ending soonest</option>
@@ -104,6 +108,7 @@
         while ($row = mysqli_fetch_assoc($searchResult)) {
             $currentPrice = $row['currentPrice'];
             $endDate = new DateTime($row['endTime']);
+            $userViews = $row['userViews'];
 
             // Function from utilities.php to display each listing
             print_listing_li(
@@ -112,7 +117,8 @@
                 substr($row['auctionDescription'], 0, 200) . '...',
                 $currentPrice,
                 $row['numberBids'],
-                $endDate
+                $endDate,
+                $userViews
             );
         }
         echo '</ul>';
