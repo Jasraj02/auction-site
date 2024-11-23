@@ -15,12 +15,40 @@
   
   // TODO: Check user's credentials (cookie/session).
   $user_id = $_SESSION['userID'];
+
+  // Sorting and pagination setup
+  $ordering = $_GET['order_by'] ?? 'popularityByBids';
+  $resultsPerPage = 10;
+  $curr_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+  $offset = ($curr_page - 1) * $resultsPerPage; 
   
   // TODO: Perform a query to pull up the auctions they've bidded on.
   // lecture slides 1B SQL, slide 44
-  $query = "SELECT Auctions.auctionID, auctionTitle, auctionDescription, currentPrice, endTime, COUNT(bidID) AS count FROM Auctions, Bids WHERE Auctions.auctionID in (SELECT Bids.auctionID from Bids WHERE buyerID = $user_id AND Bids.auctionID = auctionID) AND Bids.auctionID = Auctions.auctionID GROUP BY Auctions.auctionID";
+  $query = "SELECT Auctions.auctionID, auctionTitle, auctionDescription, currentPrice, endTime, COUNT(bidID) AS count, (SELECT COUNT(*) FROM UserViews WHERE UserViews.auctionID = Auctions.auctionID) AS userViews FROM Auctions, Bids WHERE Auctions.auctionID in (SELECT Bids.auctionID from Bids WHERE buyerID = $user_id AND Bids.auctionID = auctionID) AND Bids.auctionID = Auctions.auctionID GROUP BY Auctions.auctionID";
   $result = mysqli_query($connection, $query) or die("Error making query to database.");
   
+    // Sorting logic
+switch ($ordering) {
+  case 'priceLowToHigh':
+      $query .= " ORDER BY currentPrice ASC, Auctions.auctionTitle ASC";
+      break;
+  case 'priceHighToLow':
+      $query .= " ORDER BY currentPrice DESC, Auctions.auctionTitle ASC";
+      break;
+  case 'popularityByBids':
+      $query .= " ORDER BY count DESC, Auctions.auctionTitle ASC";
+      break;
+  case 'date':
+      $query .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
+      break;
+  case 'popularityByViews':
+      $query .= " ORDER BY userViews DESC, Auctions.auctionTitle ASC";
+      break;
+  default:
+      $query .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
+      break;
+}
+
   // mostly from browse.php
   $results_per_page = 10;
   // https://www.w3schools.com/Php/func_mysqli_num_rows.asp
@@ -34,6 +62,31 @@
   $query .= " LIMIT $results_per_page OFFSET $offset";
   $result = mysqli_query($connection, $query) or die("Error making query to database.");
   
+
+  // Total listings for pagination
+$paginationQuery = "
+SELECT COUNT(DISTINCT Auctions.auctionID) AS totalListings
+FROM Auctions
+INNER JOIN Bids ON Auctions.auctionID = Bids.auctionID
+WHERE Bids.buyerID = $user_id
+";
+$paginationResult = mysqli_query($connection, $paginationQuery);
+$totalListings = mysqli_fetch_assoc($paginationResult)['totalListings'];
+$max_page = ceil($totalListings / $resultsPerPage);
+?>
+
+<div class="mb-3">
+<label for="order_by" class="form-label">Sort by:</label>
+<select class="form-control" id="order_by" name="order_by" onchange="location = this.value;">
+    <option value="mybids.php?order_by=popularityByBids" <?= ($ordering === 'popularityByBids') ? 'selected' : '' ?>>Popularity: by bids</option>
+    <option value="mybids.php?order_by=popularityByViews" <?= ($ordering === 'popularityByViews') ? 'selected' : '' ?>>Popularity: by views</option>
+    <option value="mybids.php?order_by=priceHighToLow" <?= ($ordering === 'priceHighToLow') ? 'selected' : '' ?>>Price: highest first</option>
+    <option value="mybids.php?order_by=priceLowToHigh" <?= ($ordering === 'priceLowToHigh') ? 'selected' : '' ?>>Price: lowest first</option>
+    <option value="mybids.php?order_by=date" <?= ($ordering === 'date') ? 'selected' : '' ?>>Time: ending soonest</option>
+</select>
+</div>
+
+<?php
   // TODO: Loop through results and print them out as list items.
   while ($row = $result->fetch_assoc()) {
     // [Yan TODO]: Exception Handling
@@ -42,9 +95,10 @@
     $desc = $row["auctionDescription"];
     $price = $row["currentPrice"];
     $num_bids = $row["count"];
+    $userViews = $row['userViews'];
     // the use of new DateTime in the following line is group member Raj Singh's suggestion. Before Raj's suggestion, the line was "$end_time = $row["endTime"];"
     $end_time = new DateTime($row["endTime"]);
-    print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time);
+    print_listing_li($item_id, $title, $desc, $price, $num_bids, $end_time, $userViews);
 }
 
 ?>
