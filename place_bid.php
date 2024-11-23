@@ -24,12 +24,19 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     $loggedIn = true;
 }
 
+if (isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'seller') {
+    echo '<div class="alert alert-danger">Sellers can not place bids.</div>';
+    header("refresh: 2; url=$previous_url");
+    exit();
+}
+
 // prevent a user not logged in from placing a bid
 if (!$loggedIn) {
     echo '<div class="alert alert-danger">Must be logged in to place a bid.</div>';
     header("refresh: 2; url=$previous_url");
     exit();
 }
+
 
 if ($bid_price > $current_price) {
     echo "Success.";
