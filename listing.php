@@ -28,6 +28,7 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $end_time = new DateTime($auction['endTime']);
     $Finished = $auction['Finished'];
     $imageID = $auction['imageID'];
+    $sellerID = $auction['sellerID'];
     
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
@@ -64,12 +65,26 @@ $watching = false;
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     $buyer_id = $_SESSION['userID'] ?? null;
     $has_session = true;
+    $accountType = $_SESSION['account_type'];
     if ($buyer_id) {
       $get_watchlist = "SELECT * FROM Watchlists WHERE auctionID = '$item_id' AND buyerID = $buyer_id";
       $watchlistResult = mysqli_query($connection, $get_watchlist);
       $watching = $watchlistResult && (mysqli_num_rows($watchlistResult) > 0);
     }
 }
+
+// disable bidding for the auction creator 
+// disable watchlists for sellers
+if ($has_session && ($sellerID == $buyer_id)) {
+  $disabled = "disabled";
+} 
+// else if ($accountType == 'seller') {
+//   $disabled = "";
+// }
+else {
+  $disabled = "";
+}
+
 ?>
 
 <div class="container">
@@ -87,7 +102,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     </div>
     <div id="watch_watching" <?php if (!$has_session || !$watching) echo('style="display: none"');?> >
       <button type="button" class="btn btn-success btn-sm" disabled>Watching</button>
-      <button type="button" class="btn btn-danger btn-sm" onclick="removeFromWatchlist()">Remove watch</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeFromWatchlist()" >Remove watch</button>
     </div>
 <?php endif /* Print nothing otherwise */ ?>
   </div>
@@ -140,9 +155,9 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
       <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
       <input type="hidden" name="user_id", value=<?php echo $_SESSION['userID'] ?>>    
 	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
-	    <input type="number" name="bid", class="form-control" id="bid">
+	    <input type="number" name="bid", class="form-control" id="bid" <?php echo($disabled);?> >
       </div>
-      <button type="submit" class="btn btn-primary form-control">Place bid</button>
+      <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
     </form>
 <?php endif ?>
 
@@ -177,8 +192,7 @@ function addToWatchlist(button) {
         else {
           var failureMessage = objT;
           var mydiv = document.getElementById("watch_nowatch");
-          mydiv.appendChild(document.createElement("br"));
-          mydiv.appendChild(document.createTextNode("Add to watch failed.\n" + failureMessage));
+          mydiv.innerHTML = '<div class="alert alert-danger">Add to watch failed: ' + failureMessage + '</div>';
         }
       },
 
@@ -209,8 +223,7 @@ function removeFromWatchlist(button) {
         else {
           var failureMessage = objT;
           var mydiv = document.getElementById("watch_watching");
-          mydiv.appendChild(document.createElement("br"));
-          mydiv.appendChild(document.createTextNode("Watch removal failed.\n" + failureMessage));
+          mydiv.innerHTML = '<div class="alert alert-danger">Watch removal failed: ' + failureMessage + '</div>';
         }
       },
 

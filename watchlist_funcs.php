@@ -27,7 +27,10 @@ if ($_POST['functionname'] == "add_to_watchlist") {
 
   if ($loggedIn && ($auctionSellerID == $userID)) {
     $res = "This is your auction";
-  } else if ($loggedIn) {
+  } else if ($loggedIn && ($_SESSION['account_type'] == 'seller')){
+    $res  = "Sellers cannot add items to a watchlist";
+  }
+  else if ($loggedIn) {
     $watchAddQuery = "INSERT INTO Watchlists (buyerID,auctionID,notificationEnabled) VALUES ($userID,$auctionID,$notification)";
     mysqli_query($connection, $watchAddQuery) or die("Error creating the INSERT Watchlist query".mysql_error($connection));
     $res = "success";
