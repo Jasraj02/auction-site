@@ -28,6 +28,7 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $end_time = new DateTime($auction['endTime']);
     $Finished = $auction['Finished'];
     $imageID = $auction['imageID'];
+    $sellerID = $auction['sellerID'];
     
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
@@ -58,19 +59,32 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
   }
 
 //check if user is logged in and watching the item
-$has_session = true;
+$has_session = false;
 $watching = false;
 
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    $buyer_id = $_SESSION['buyerID'] ?? null;
-
+    $buyer_id = $_SESSION['userID'] ?? null;
+    $has_session = true;
+    $accountType = $_SESSION['account_type'];
     if ($buyer_id) {
-        $get_watchlist = "SELECT * FROM watchlist WHERE auctionID = '$item_id' AND buyerID = $buyer_id";
-        $watchlistResult = mysqli_query($connection, $get_watchlist);
-
-        $watching = $watchlistResult && mysqli_num_rows($watchlistResult) > 0;
+      $get_watchlist = "SELECT * FROM Watchlists WHERE auctionID = '$item_id' AND buyerID = $buyer_id";
+      $watchlistResult = mysqli_query($connection, $get_watchlist);
+      $watching = $watchlistResult && (mysqli_num_rows($watchlistResult) > 0);
     }
 }
+
+// disable bidding for the auction creator 
+// disable watchlists for sellers
+if ($has_session && ($sellerID == $buyer_id)) {
+  $disabled = "disabled";
+} 
+// else if ($accountType == 'seller') {
+//   $disabled = "";
+// }
+else {
+  $disabled = "";
+}
+
 ?>
 
 <div class="container">
@@ -88,7 +102,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     </div>
     <div id="watch_watching" <?php if (!$has_session || !$watching) echo('style="display: none"');?> >
       <button type="button" class="btn btn-success btn-sm" disabled>Watching</button>
-      <button type="button" class="btn btn-danger btn-sm" onclick="removeFromWatchlist()">Remove watch</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeFromWatchlist()" >Remove watch</button>
     </div>
 <?php endif /* Print nothing otherwise */ ?>
   </div>
@@ -118,7 +132,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
   <?php  //Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
   //       to lack of high-enough bids   **add ability to cancel and view expired auctions***
- if ($Finished): ?>
+  if ($Finished): ?>
     This auction ended on <?php echo(date_format($end_time, 'j M H:i')) ?>
     <?php if ($auction['status'] === 'completed'): ?>
       Winning bid: £<?php echo(number_format($current_price, 2)); ?>
@@ -141,9 +155,9 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
       <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
       <input type="hidden" name="user_id", value=<?php echo $_SESSION['userID'] ?>>    
 	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
-	    <input type="number" name="bid", class="form-control" id="bid">
+	    <input type="number" name="bid", class="form-control" id="bid" <?php echo($disabled);?> >
       </div>
-      <button type="submit" class="btn btn-primary form-control">Place bid</button>
+      <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
     </form>
 <?php endif ?>
 
@@ -158,11 +172,8 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 
 
 <script> 
-// JavaScript functions: addToWatchlist and removeFromWatchlist.
 
 function addToWatchlist(button) {
-  console.log("These print statements are helpful for debugging btw");
-
   // This performs an asynchronous call to a PHP function using POST method.
   // Sends item ID as an argument to that function.
   $.ajax('watchlist_funcs.php', {
@@ -172,7 +183,6 @@ function addToWatchlist(button) {
     success: 
       function (obj, textstatus) {
         // Callback function for when call is successful and returns obj
-        console.log("Success");
         var objT = obj.trim();
  
         if (objT == "success") {
@@ -180,9 +190,9 @@ function addToWatchlist(button) {
           $("#watch_watching").show();
         }
         else {
+          var failureMessage = objT;
           var mydiv = document.getElementById("watch_nowatch");
-          mydiv.appendChild(document.createElement("br"));
-          mydiv.appendChild(document.createTextNode("Add to watch failed. Try again later."));
+          mydiv.innerHTML = '<div class="alert alert-danger">Add to watch failed: ' + failureMessage + '</div>';
         }
       },
 
@@ -204,7 +214,6 @@ function removeFromWatchlist(button) {
     success: 
       function (obj, textstatus) {
         // Callback function for when call is successful and returns obj
-        console.log("Success");
         var objT = obj.trim();
  
         if (objT == "success") {
@@ -212,9 +221,9 @@ function removeFromWatchlist(button) {
           $("#watch_nowatch").show();
         }
         else {
+          var failureMessage = objT;
           var mydiv = document.getElementById("watch_watching");
-          mydiv.appendChild(document.createElement("br"));
-          mydiv.appendChild(document.createTextNode("Watch removal failed. Try again later."));
+          mydiv.innerHTML = '<div class="alert alert-danger">Watch removal failed: ' + failureMessage + '</div>';
         }
       },
 
