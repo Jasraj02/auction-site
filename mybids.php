@@ -17,6 +17,7 @@
   $user_id = $_SESSION['userID'];
   
   // TODO: Perform a query to pull up the auctions they've bidded on.
+  // lecture slides 1B SQL, slide 44
   $query = "SELECT Auctions.auctionID, auctionTitle, auctionDescription, currentPrice, endTime, COUNT(bidID) AS count FROM Auctions, Bids WHERE Auctions.auctionID in (SELECT Bids.auctionID from Bids WHERE buyerID = $user_id AND Bids.auctionID = auctionID) AND Bids.auctionID = Auctions.auctionID GROUP BY Auctions.auctionID";
   $result = mysqli_query($connection, $query) or die("Error making query to database.");
   
