@@ -108,59 +108,6 @@ function print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time,
     ');
   }
 
-
-// function returns important details regarding an auction from the auctionID 
-function giveAuctionDetails ($auctionID,$databaseConnection) {
-  $detailsQuery = "SELECT auctionTitle, sellerID, categoryID, auctionDescription, imageID, 
-                  startingPrice, reservePrice, currentPrice, startTime, endTime
-                  FROM Auctions
-                  WHERE auctionID = $auctionID";
-  $detailsResult = mysqli_query($databaseConnection,$detailsQuery);
-  $detailsRow = mysqli_fetch_assoc($detailsResult);
-  if (isset($detailsRow)) {
-      $auctionDetails = [
-          'auctionTitle' => $detailsRow['auctionTitle'],
-          'sellerID' => $detailsRow['sellerID'],
-          'categoryID' => $detailsRow['categoryID'],
-          'auctionDescription' => $detailsRow['auctionDescription'],
-          'imageID' => $detailsRow['imageID'],
-          'startingPrice' => $detailsRow['startingPrice'],
-          'reservePrice' => $detailsRow['reservePrice'],
-          'currentPrice' => $detailsRow['currentPrice'],
-          'startTime' => $detailsRow['startTime'],
-          'endTime' => $detailsRow['endTime']
-      ];
-  }
-  else {
-      $auctionDetails = NULL;
-  }
-  
-  return $auctionDetails;
-}
-
-function giveAuctionViews($auctionID,$databaseConnection) {
-  $auctionViewsQuery = "SELECT COUNT(userID) AS views
-                        FROM UserViews
-                        WHERE auctionID = $auctionID;";
-  $auctionViewsResult = mysqli_query($databaseConnection,$auctionViewsQuery);
-  $auctionViewRow = mysqli_fetch_assoc($auctionViewsResult);
-  return $auctionViewRow['views'];
-}
-
-
-function giveAuctionBids($auctionID,$databaseConnection) {
-  $auctionBidsQuery = "SELECT COUNT(bidID) AS bids
-                        FROM Bids
-                        WHERE auctionID = $auctionID;";
-  $auctionBidsResult = mysqli_query($databaseConnection,$auctionBidsQuery);
-  $auctionBidsRow = mysqli_fetch_assoc($auctionBidsResult);
-
-  return $auctionBidsRow['bids'];
-
-}
-
-
-
 // print_listing_li:
 // This function prints an HTML <li> element containing an auction listing
 function print_listing_li2($item_id, $title, $desc, $price, $num_bids, $end_time, $userViews, $date_added)
@@ -212,4 +159,56 @@ function print_listing_li2($item_id, $title, $desc, $price, $num_bids, $end_time
           </div>
       </li>
   ');
+}
+
+
+
+// function returns important details regarding an auction from the auctionID 
+function giveAuctionDetails ($auctionID,$databaseConnection) {
+  $detailsQuery = "SELECT auctionTitle, sellerID, categoryID, auctionDescription, imageID, 
+                  startingPrice, reservePrice, currentPrice, startTime, endTime
+                  FROM Auctions
+                  WHERE auctionID = $auctionID";
+  $detailsResult = mysqli_query($databaseConnection,$detailsQuery);
+  $detailsRow = mysqli_fetch_assoc($detailsResult);
+  if (isset($detailsRow)) {
+      $auctionDetails = [
+          'auctionTitle' => $detailsRow['auctionTitle'],
+          'sellerID' => $detailsRow['sellerID'],
+          'categoryID' => $detailsRow['categoryID'],
+          'auctionDescription' => $detailsRow['auctionDescription'],
+          'imageID' => $detailsRow['imageID'],
+          'startingPrice' => $detailsRow['startingPrice'],
+          'reservePrice' => $detailsRow['reservePrice'],
+          'currentPrice' => $detailsRow['currentPrice'],
+          'startTime' => $detailsRow['startTime'],
+          'endTime' => $detailsRow['endTime']
+      ];
+  }
+  else {
+      $auctionDetails = NULL;
+  }
+  
+  return $auctionDetails;
+}
+
+function giveAuctionViews($auctionID,$databaseConnection) {
+  $auctionViewsQuery = "SELECT COUNT(userID) AS views
+                        FROM UserViews
+                        WHERE auctionID = $auctionID;";
+  $auctionViewsResult = mysqli_query($databaseConnection,$auctionViewsQuery);
+  $auctionViewRow = mysqli_fetch_assoc($auctionViewsResult);
+  return $auctionViewRow['views'];
+}
+
+
+function giveAuctionBids($auctionID,$databaseConnection) {
+  $auctionBidsQuery = "SELECT COUNT(bidID) AS bids
+                        FROM Bids
+                        WHERE auctionID = $auctionID;";
+  $auctionBidsResult = mysqli_query($databaseConnection,$auctionBidsQuery);
+  $auctionBidsRow = mysqli_fetch_assoc($auctionBidsResult);
+
+  return $auctionBidsRow['bids'];
+
 }
