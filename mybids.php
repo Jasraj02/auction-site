@@ -24,7 +24,7 @@
   
   // TODO: Perform a query to pull up the auctions they've bidded on.
   // lecture slides 1B SQL, slide 44
-  $query = "SELECT Auctions.auctionID, auctionTitle, auctionDescription, currentPrice, endTime, COUNT(bidID) AS count, (SELECT COUNT(*) FROM UserViews WHERE UserViews.auctionID = Auctions.auctionID) AS userViews FROM Auctions, Bids WHERE Auctions.auctionID in (SELECT Bids.auctionID from Bids WHERE buyerID = $user_id AND Bids.auctionID = auctionID) AND Bids.auctionID = Auctions.auctionID GROUP BY Auctions.auctionID";
+  $query = "SELECT Auctions.auctionID, auctionTitle, auctionDescription, currentPrice, endTime, COUNT(bidID) AS count, startTime as dateAdded, (SELECT COUNT(*) FROM UserViews WHERE UserViews.auctionID = Auctions.auctionID) AS userViews FROM Auctions, Bids WHERE Auctions.auctionID in (SELECT Bids.auctionID from Bids WHERE buyerID = $user_id AND Bids.auctionID = auctionID) AND Bids.auctionID = Auctions.auctionID GROUP BY Auctions.auctionID";
   $result = mysqli_query($connection, $query) or die("Error making query to database.");
   
     // Sorting logic
@@ -38,14 +38,20 @@ switch ($ordering) {
   case 'popularityByBids':
       $query .= " ORDER BY count DESC, Auctions.auctionTitle ASC";
       break;
+  case 'popularityByBids2':
+      $query .= " ORDER BY count ASC, Auctions.auctionTitle ASC";
+      break;
   case 'date':
       $query .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
       break;
   case 'popularityByViews':
       $query .= " ORDER BY userViews DESC, Auctions.auctionTitle ASC";
       break;
-  default:
-      $query .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
+  case 'popularityByViews2':
+      $query .= " ORDER BY userViews ASC, Auctions.auctionTitle ASC";
+      break;
+  case 'dateAdded':
+      $query .= " ORDER BY Auctions.startTime DESC, Auctions.auctionTitle ASC";
       break;
 }
 
@@ -78,11 +84,14 @@ $max_page = ceil($totalListings / $resultsPerPage);
 <div class="mb-3">
 <label for="order_by" class="form-label">Sort by:</label>
 <select class="form-control" id="order_by" name="order_by" onchange="location = this.value;">
-    <option value="mybids.php?order_by=popularityByBids" <?= ($ordering === 'popularityByBids') ? 'selected' : '' ?>>Popularity: by bids</option>
-    <option value="mybids.php?order_by=popularityByViews" <?= ($ordering === 'popularityByViews') ? 'selected' : '' ?>>Popularity: by views</option>
+    <option value="mybids.php?order_by=popularityByBids" <?= ($ordering === 'popularityByBids') ? 'selected' : '' ?>>Most popular: bids</option>
+    <option value="mybids.php?order_by=popularityByViews" <?= ($ordering === 'popularityByViews') ? 'selected' : '' ?>>Most popular: views</option>
+    <option value="mybids.php?order_by=popularityByBids2" <?= ($ordering === 'popularityByBids2') ? 'selected' : '' ?>>Least popular: bids</option>
+    <option value="mybids.php?order_by=popularityByViews2" <?= ($ordering === 'popularityByViews2') ? 'selected' : '' ?>>Least popular: views</option>
     <option value="mybids.php?order_by=priceHighToLow" <?= ($ordering === 'priceHighToLow') ? 'selected' : '' ?>>Price: highest first</option>
     <option value="mybids.php?order_by=priceLowToHigh" <?= ($ordering === 'priceLowToHigh') ? 'selected' : '' ?>>Price: lowest first</option>
     <option value="mybids.php?order_by=date" <?= ($ordering === 'date') ? 'selected' : '' ?>>Time: ending soonest</option>
+    <option value="mybids.php?order_by=dateAdded" <?= ($ordering === 'dateAdded') ? 'selected' : '' ?>>Time: newly listed</option>
 </select>
 </div>
 
@@ -96,9 +105,10 @@ $max_page = ceil($totalListings / $resultsPerPage);
     $price = $row["currentPrice"];
     $num_bids = $row["count"];
     $userViews = $row['userViews'];
+    $dateAdded = $row['dateAdded'];
     // the use of new DateTime in the following line is group member Raj Singh's suggestion. Before Raj's suggestion, the line was "$end_time = $row["endTime"];"
     $end_time = new DateTime($row["endTime"]);
-    print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time, $userViews);
+    print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time, $userViews, $dateAdded);
 }
 
 ?>

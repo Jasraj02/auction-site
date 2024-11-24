@@ -45,7 +45,7 @@
     // Base query for retrieving listings
     $searchQuery = "
         SELECT Auctions.auctionID, Auctions.auctionTitle, Auctions.auctionDescription, 
-               Auctions.startingPrice, Auctions.endTime, 
+               Auctions.startingPrice, Auctions.endTime, Auctions.startTime AS dateAdded,
                COALESCE(MAX(Bids.bidPrice), Auctions.startingPrice) AS currentPrice, 
                COUNT(Bids.bidID) AS numberBids,
                (SELECT COUNT(*) FROM UserViews WHERE UserViews.auctionID = Auctions.auctionID) AS userViews
@@ -69,11 +69,17 @@
         case 'date':
             $searchQuery .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
             break;
-        case 'popularityByViews': // Correctly use the alias `userViews`
+        case 'popularityByViews':
             $searchQuery .= " ORDER BY userViews DESC, Auctions.auctionTitle ASC";
             break;
-        default:
-            $searchQuery .= " ORDER BY Auctions.endTime ASC, Auctions.auctionTitle ASC";
+        case 'dateAdded':
+            $searchQuery .= " ORDER BY Auctions.startTime DESC, Auctions.auctionTitle ASC";
+            break;
+        case 'popularityByBids2':
+            $query .= " ORDER BY count ASC, Auctions.auctionTitle ASC";
+            break;
+        case 'popularityByViews2':
+            $query .= " ORDER BY userViews ASC, Auctions.auctionTitle ASC";
             break;
     }
 
@@ -96,11 +102,14 @@
     <div class="mb-3">
         <label for="order_by" class="form-label">Sort by:</label>
         <select class="form-control" id="order_by" name="order_by" onchange="location = this.value;">
-            <option value="mylistings.php?order_by=popularityByBids" <?= ($ordering === 'popularityByBids') ? 'selected' : '' ?>>Popularity: by bids</option>
-            <option value="mylistings.php?order_by=popularityByViews" <?= ($ordering === 'popularityByViews') ? 'selected' : '' ?>>Popularity: by views</option>
+            <option value="mylistings.php?order_by=popularityByBids" <?= ($ordering === 'popularityByBids') ? 'selected' : '' ?>>Most popular: by bids</option>
+            <option value="mylistings.php?order_by=popularityByViews" <?= ($ordering === 'popularityByViews') ? 'selected' : '' ?>>Most popular: by views</option>
+            <option value="mybids.php?order_by=popularityByBids2" <?= ($ordering === 'popularityByBids2') ? 'selected' : '' ?>>Least popular: by bids</option>
+            <option value="mybids.php?order_by=popularityByViews2" <?= ($ordering === 'popularityByViews2') ? 'selected' : '' ?>>Least popular: by views</option>
             <option value="mylistings.php?order_by=priceHighToLow" <?= ($ordering === 'priceHighToLow') ? 'selected' : '' ?>>Price: highest first</option>
             <option value="mylistings.php?order_by=priceLowToHigh" <?= ($ordering === 'priceLowToHigh') ? 'selected' : '' ?>>Price: lowest first</option>
             <option value="mylistings.php?order_by=date" <?= ($ordering === 'date') ? 'selected' : '' ?>>Time: ending soonest</option>
+            <option value="mylistings.php?order_by=dateAdded" <?= ($ordering === 'dateAdded') ? 'selected' : '' ?>>Time: newly listed</option>
         </select>
     </div>
 
@@ -113,16 +122,19 @@
             $currentPrice = $row['currentPrice'];
             $endDate = new DateTime($row['endTime']);
             $userViews = $row['userViews'];
+            $dateAdded = $row['dateAdded'];
+            
 
             // Function from utilities.php to display each listing
-            print_listing_li(
+            print_listing_li2(
                 $row['auctionID'],
                 $row['auctionTitle'],
                 substr($row['auctionDescription'], 0, 200) . '...',
                 $currentPrice,
                 $row['numberBids'],
                 $endDate,
-                $userViews
+                $userViews,
+                $dateAdded
             );
         }
         echo '</ul>';
