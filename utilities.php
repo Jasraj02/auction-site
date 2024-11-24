@@ -129,5 +129,26 @@ function giveAuctionDetails ($auctionID,$databaseConnection) {
   return $auctionDetails;
 }
 
+function giveAuctionViews($auctionID,$databaseConnection) {
+  $auctionViewsQuery = "SELECT COUNT(userID) AS views
+                        FROM UserViews
+                        WHERE auctionID = $auctionID;";
+  $auctionViewsResult = mysqli_query($databaseConnection,$auctionViewsQuery);
+  $auctionViewRow = mysqli_fetch_assoc($auctionViewsResult);
+  return $auctionViewRow['views'];
+}
+
+
+function giveAuctionBids($auctionID,$databaseConnection) {
+  $auctionBidsQuery = "SELECT COUNT(bidID) AS bids
+                        FROM Bids
+                        WHERE auctionID = $auctionID;";
+  $auctionBidsResult = mysqli_query($databaseConnection,$auctionBidsQuery);
+  $auctionBidsRow = mysqli_fetch_assoc($auctionBidsResult);
+
+  return $auctionBidsRow['bids'];
+
+}
+
 
 ?>

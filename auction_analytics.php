@@ -37,10 +37,18 @@ if ($liveAuctionsResult && mysqli_num_rows($liveAuctionsResult) > 0) {
         $endTime = $row['endTime'];
         $currentPrice = $row['currentPrice'];
         $currentAuctionSum = $currentAuctionSum + $currentPrice;
+
+        $viewAmount = giveAuctionViews($auctionID,$connection);
+        $bidAmount = giveAuctionBids($auctionID,$connection);
+        $viewBidRatio = round($viewAmount / $bidAmount ,1);
+
         echo("<li class='list-group-item'>
                 <strong><a href='listing.php?item_id=$auctionID'>$auctionTitle</a></strong>
                 <br>Current Price: <strong>£$currentPrice</strong>
-                <br>Ends On: <strong>$endTime</strong><br>
+                <br>Ends On: <strong>$endTime</strong>
+                <br>Views: <strong>$viewAmount</strong>
+                <br>Bids: <strong>$bidAmount</strong>
+                <br>View to Bid Ratio of <strong>$viewBidRatio</strong>
               </li>");
         
     }
@@ -51,6 +59,7 @@ if ($liveAuctionsResult && mysqli_num_rows($liveAuctionsResult) > 0) {
 }
 
 // Following chunk shows all the expired auctions a User has 
+// this includes extras such as increase over reserve price
 $expiredAuctionsQuery = "SELECT auctionID
                         FROM Auctions
                         WHERE sellerID = $sellerID
@@ -64,7 +73,6 @@ if ($expiredAuctionsResult && mysqli_num_rows($expiredAuctionsResult) > 0) {
 
         $auctionID = $row['auctionID'];
         $aucDetails = giveAuctionDetails($auctionID,$connection);
-
         $auctionTitle = $aucDetails['auctionTitle'];
         $currentPrice = $aucDetails['currentPrice'];
         $startingPrice = $aucDetails['startingPrice'];
@@ -76,7 +84,7 @@ if ($expiredAuctionsResult && mysqli_num_rows($expiredAuctionsResult) > 0) {
                 <strong><a href='listing.php?item_id=$auctionID'>$auctionTitle</a></strong>
                 <br>Starting Price: <strong>£$startingPrice</strong>
                 <br>Final Price: <strong>£$currentPrice</strong>
-                <br>Additional gain over Reserve Price: <strong>£$priceIncrease</strong>
+                <br>Increase over Reserve Price: <strong>£$priceIncrease</strong>
                 <br>Ended On: <strong>$endTime</strong><br>
               </li>");
     }
@@ -142,17 +150,19 @@ if ($leastPopularAuctionResult && mysqli_num_rows($leastPopularAuctionResult) > 
               </li>");
 }
 
+// 
+
+
+
+
 // Potential Analytics/Features of the page 
-
-// Views to bid ratio of each running auction?? 
-// Final sale price vs starting price of expired auctions 
-
 
 // Make a seller (lifetime) analytics table 
 // this is updated every time a seller clicks on the refresh button
+
 // based only off completed auctions 
 // sellerAnalytics (sellerID, totalRevenue, avgViews , successRate, lastUpdated)
-
+// implement this to gamify the experience (give the seller a rank of their avgViews,successRate and totalRevenue)
 
 
 ?>
