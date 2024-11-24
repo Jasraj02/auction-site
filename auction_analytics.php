@@ -150,19 +150,62 @@ if ($leastPopularAuctionResult && mysqli_num_rows($leastPopularAuctionResult) > 
               </li>");
 }
 
-// 
+
+echo('<br><h4>Lifetime Analytics</h4>');
+// Following chunk will display the lifetime analytics of the user 
+
+// Find the number of distinct auctions the user has put up
+
+$numberOfFinishedAuctionsQuery = "SELECT COUNT(*) AS total
+                    FROM Auctions
+                    WHERE sellerID = $sellerID
+                    AND endTime <= NOW();";
+$numberOfFinishedAuctionsResult = mysqli_query($connection, $numberOfFinishedAuctionsQuery);
+$numberOfFinishedAuctionsRow = mysqli_fetch_assoc($numberOfFinishedAuctionsResult);
+
+if (isset($numberOfFinishedAuctionsRow)) {
+    $numberOfFinishedAuctions = $numberOfFinishedAuctionsRow['total'];
+}
+else {
+    $numberOfFinishedAuctions = NULL;
+}
 
 
 
+if (!isset($numberOfFinishedAuctions)) {
+    echo('An error occured whilst retrieving lifetime analytics');
+} else if ($numberOfFinishedAuctions == 0) {
+    echo('No auctions have placed and/or have finished.');
+} else {
+    echo("Total number of finished auctions: <strong>$numberOfFinishedAuctions</strong>. <br>");
+    
+    // find total revenue from all auctions 
+    $totalRevenueQuery = "SELECT SUM(currentPrice) AS totalRevenue
+                        FROM Auctions
+                        WHERE sellerID = $sellerID
+                        AND endTime <= NOW();";
+    $totalRevenueResult = mysqli_query($connection, $totalRevenueQuery);
+    $totalRevenueRow = mysqli_fetch_assoc($totalRevenueResult);
+    $totalRevenue = round($totalRevenueRow['totalRevenue']);
+    echo("Total Revenue from all Finished Listings: <strong>£$totalRevenue</strong><br>");
 
-// Potential Analytics/Features of the page 
+    // find total views from all finished auctions 
+    $totalViewsQuery = " SELECT COUNT(UV.userID) AS totalViews
+                        FROM Auctions A
+                        JOIN UserViews UV ON A.auctionID = UV.auctionID
+                        WHERE A.sellerID = $sellerID
+                        AND A.endTime <= NOW();";
+    
+    $totalViewsResult = mysqli_query($connection, $totalViewsQuery);
+    $totalViewsRow = mysqli_fetch_assoc($totalViewsResult);
+    $totalViews = round($totalViewsRow['totalRevenue']);
+    $avgViews = $totalViews / $numberOfFinishedAuctions;
 
-// Make a seller (lifetime) analytics table 
-// this is updated every time a seller clicks on the refresh button
+    echo("Average views for Completed Listings : <strong>$avgViews</strong><br>");
+}
 
-// based only off completed auctions 
-// sellerAnalytics (sellerID, totalRevenue, avgViews , successRate, lastUpdated)
-// implement this to gamify the experience (give the seller a rank of their avgViews,successRate and totalRevenue)
+
+
 
 
 ?>
