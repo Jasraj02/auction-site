@@ -206,8 +206,6 @@ if (!isset($numberOfFinishedAuctions)) {
 
 
 
-
-
 ?>
 
 
