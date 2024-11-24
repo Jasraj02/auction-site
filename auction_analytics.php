@@ -150,19 +150,6 @@ if ($leastPopularAuctionResult && mysqli_num_rows($leastPopularAuctionResult) > 
               </li>");
 }
 
-// 
-
-
-
-
-// Potential Analytics/Features of the page 
-
-// Make a seller (lifetime) analytics table 
-// this is updated every time a seller clicks on the refresh button
-
-// based only off completed auctions 
-// sellerAnalytics (sellerID, totalRevenue, avgViews , successRate, lastUpdated)
-// implement this to gamify the experience (give the seller a rank of their avgViews,successRate and totalRevenue)
 
 
 ?>

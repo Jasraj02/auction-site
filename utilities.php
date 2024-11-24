@@ -107,7 +107,6 @@ function print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time,
         </li>
     ');
   }
-}
 
 
 // function returns important details regarding an auction from the auctionID 
