@@ -16,6 +16,7 @@ $result = mysqli_query($connection, $query) or die("Error making query to databa
 while ($row = $result->fetch_assoc()) {
     // [Yan TODO]: Exception Handling
     $current_price = $row["currentPrice"];
+    $end_time = $row["endTime"]; 
 }
 
 //check if user is logged in
@@ -38,7 +39,19 @@ if (!$loggedIn) {
 }
 
 
-if ($bid_price > $current_price) {
+if ($bid_price > $current_price) {    
+    $current_time = new DateTime();  
+    $auction_end_time = new DateTime($end_time);      
+    $time_diff = $auction_end_time->diff($current_time);
+    $minutes_left = $time_diff->i + ($time_diff->h * 60);  
+    
+    if ($minutes_left <= 10) {        
+        $auction_end_time->modify('+10 minutes');
+        $new_end_time = $auction_end_time->format('Y-m-d H:i:s');                
+        $update_query = "UPDATE Auctions SET endTime = '$new_end_time' WHERE auctionID = $item_id";
+        mysqli_query($connection, $update_query) or die("Error updating auction end time.");
+    }
+    
     echo "Success.";
     // https://www.w3schoolsgit .com/mysql/mysql_update.asp
     $query = "UPDATE Auctions SET currentPrice = $bid_price WHERE auctionID = $item_id";
