@@ -38,13 +38,17 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && $_SESSIO
   }
 }
 //use item_id to make a query to the database.
-$searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished,
-                (SELECT COUNT(*) FROM UserViews WHERE auctionID = $item_id) AS viewCount
-                FROM Auctions
-                LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
-                WHERE Auctions.auctionID = $item_id";
-
-$searchQuery .= " GROUP BY Auctions.auctionID";
+$searchQuery = "
+    SELECT Auctions.*, 
+           MAX(Bids.bidPrice) AS currentPrice, 
+           COUNT(Bids.bidID) AS numberBids, 
+           Auctions.endTime < CURRENT_TIMESTAMP() AS Finished,
+           Auctions.startTime AS dateAdded,
+           (SELECT COUNT(*) FROM UserViews WHERE auctionID = $item_id) AS viewCount
+    FROM Auctions
+    LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
+    WHERE Auctions.auctionID = $item_id
+    GROUP BY Auctions.auctionID";
 
 //Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
@@ -60,7 +64,8 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $imageID = $auction['imageID'];
     $sellerID = $auction['sellerID'];
     $viewCount = $auction['viewCount'];
-    
+    $dateAdded = $auction['dateAdded']; 
+       
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
       $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysql_error());
@@ -124,6 +129,7 @@ else {
   <div class="col-sm-8"> <!-- Left col -->
     <h2 class="my-3"><?php echo($title); ?></h2>
     <p>Views: <?php echo $viewCount; ?></p> <!-- Display view count -->
+    <p>Date Added: <?php echo date_format(new DateTime($dateAdded), 'j M Y H:i'); ?></p> <!-- Display date added -->
   </div>
   <div class="col-sm-4 align-self-center"> <!-- Right col -->
 <?php 
