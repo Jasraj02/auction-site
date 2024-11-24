@@ -99,4 +99,35 @@ function print_bidding_li($item_id, $title, $desc, $price, $num_bids, $end_time,
     ');
 }
 
+
+// function returns important details regarding an auction from the auctionID 
+function giveAuctionDetails ($auctionID,$databaseConnection) {
+  $detailsQuery = "SELECT auctionTitle, sellerID, categoryID, auctionDescription, imageID, 
+                  startingPrice, reservePrice, currentPrice, startTime, endTime
+                  FROM Auctions
+                  WHERE auctionID = $auctionID";
+  $detailsResult = mysqli_query($databaseConnection,$detailsQuery);
+  $detailsRow = mysqli_fetch_assoc($detailsResult);
+  if (isset($detailsRow)) {
+      $auctionDetails = [
+          'auctionTitle' => $detailsRow['auctionTitle'],
+          'sellerID' => $detailsRow['sellerID'],
+          'categoryID' => $detailsRow['categoryID'],
+          'auctionDescription' => $detailsRow['auctionDescription'],
+          'imageID' => $detailsRow['imageID'],
+          'startingPrice' => $detailsRow['startingPrice'],
+          'reservePrice' => $detailsRow['reservePrice'],
+          'currentPrice' => $detailsRow['currentPrice'],
+          'startTime' => $detailsRow['startTime'],
+          'endTime' => $detailsRow['endTime']
+      ];
+  }
+  else {
+      $auctionDetails = NULL;
+  }
+  
+  return $auctionDetails;
+}
+
+
 ?>
