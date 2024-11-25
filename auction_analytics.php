@@ -204,8 +204,6 @@ if (!isset($numberOfFinishedAuctions)) {
     echo("Average views for Completed Listings : <strong>$avgViews</strong><br>");
 }
 
-
-
 ?>
 
 

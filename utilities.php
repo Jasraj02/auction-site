@@ -212,3 +212,126 @@ function giveAuctionBids($auctionID,$databaseConnection) {
   return $auctionBidsRow['bids'];
 
 }
+
+function giveBidPercentageIncrease($auctionID,$databaseConnection) {
+  $bidIncreaseQuery = " SELECT (SELECT bidPrice 
+                    FROM Bids 
+                    WHERE auctionID = $auctionID 
+                    ORDER BY bidPrice DESC 
+                    LIMIT 1) AS latestBid,
+                    (SELECT bidPrice 
+                    FROM Bids 
+                    WHERE auctionID = $auctionID 
+                    ORDER BY bidPrice DESC 
+                    LIMIT 1 OFFSET 1) AS previousBid";
+  
+  $bidIncreaseResult = mysqli_query($databaseConnection, $bidIncreaseQuery);
+
+  if (isset($bidIncreaseResult)) {
+    $bidIncreaseRow = mysqli_fetch_assoc($bidIncreaseResult);
+    $latestBid = isset($bidIncreaseRow['latestBid']) ? $bidIncreaseRow['latestBid'] : NULL;
+    $previousBid = isset($bidIncreaseRow['previousBid']) ? $bidIncreaseRow['previousBid'] : NULL;
+    
+    if (isset($latestBid)) {
+      $latestBid = (float)$latestBid;
+    }
+    
+    if (isset($previousBid)) {
+      $previousBid = (float)$previousBid;
+    }
+    
+    if (isset($latestBid) && isset($previousBid)) {
+      $increasePercentage = ($latestBid - $previousBid)/($previousBid);
+      return $increasePercentage;
+    } else {
+      $increasePercentage = 0;
+      return $increasePercentage;
+    }
+
+    
+  }
+  else {
+    return NULL;
+  }
+
+    
+}
+
+
+function suggestedPriceIncrease($auctionID,$databaseConnection) {
+
+  $auctionDetails = giveAuctionDetails($auctionID, $databaseConnection);
+  // find time left on auction
+  $endTime = new DateTime($auctionDetails['endTime']);
+  $currentTime = new DateTime();
+  $minutesRemaining = ($currentTime < $endTime) 
+  ? $currentTime->diff($endTime)->format('%a') * 1440 + $currentTime->diff($endTime)->format('%h') * 60 + $currentTime->diff($endTime)->format('%i')
+  : 0;
+
+  $minutesMultiplier = 1;
+  $bidMultiplier = 1;
+  $viewMultiplier = 1;
+  $bidIncreaseMultiplier = 1;
+
+  // apply an minuyes multiplier
+  if ($minutesRemaining <= 5) {
+    $minutesMultiplier = 1.25;
+  } else if ($minutesRemaining <= 60) {
+    $minutesMultiplier = 1.2;
+  } elseif ($minutesRemaining <= 360) { 
+    $minutesMultiplier = 1.15;
+  } elseif ($minutesRemaining <= 720) { 
+    $minutesMultiplier = 1.10;
+  } elseif ($minutesRemaining <= 1440) {
+    $minutesMultiplier = 1.05;
+}
+
+$viewCount = giveAuctionViews($auctionID, $databaseConnection);
+$bidCount = giveAuctionBids($auctionID, $databaseConnection);
+
+  // apply multiplier for bids
+  if ($bidCount >= 20) {
+      $bidMultiplier = 1.40;
+  } elseif ($bidCount >= 15) {
+      $bidMultiplier = 1.30;
+  } elseif ($bidCount >= 10) {
+      $bidMultiplier = 1.20;
+  } elseif ($bidCount >= 5) {
+      $bidMultiplier = 1.15;
+  }
+
+  // apply multiplier for views
+  if ($viewCount >= 50) {
+      $viewMultiplier = 1.40;
+  } elseif ($viewCount >= 40) {
+      $viewMultiplier = 1.30;
+  } elseif ($viewCount >= 30) {
+      $viewMultiplier = 1.20;
+  } elseif ($viewCount >= 20) {
+      $viewMultiplier = 1.10;
+  } elseif ($viewCount >= 10) {
+      $viewMultiplier = 1.05;
+  }
+
+
+$bidPercentageIncrease = giveBidPercentageIncrease($auctionID,$databaseConnection);
+
+// apply multiplier for latest bid increase
+if (isset($bidPercentageIncrease)) {
+  if ($bidPercentageIncrease >= 30) {
+      $bidIncreaseMultiplier = 1.5;
+  } elseif ($bidPercentageIncrease >= 20) {
+      $bidIncreaseMultiplier = 1.4;
+  } elseif ($bidPercentageIncrease >= 15) {
+      $bidIncreaseMultiplier = 1.2;
+  } elseif ($bidPercentageIncrease >= 10) {
+      $bidIncreaseMultiplier = 1.1;
+  }
+}
+
+
+$basePercentIncrease = 5;
+$suggestedPercentIncrease = $basePercentIncrease * $minutesMultiplier * $bidMultiplier * $viewMultiplier * $bidIncreaseMultiplier;
+
+return $suggestedPercentIncrease;
+}

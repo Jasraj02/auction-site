@@ -66,7 +66,7 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
-      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysql_error());
+      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysqli_error($connection));
 
       if ($imageDataResult && $imageDataRow = mysqli_fetch_assoc($imageDataResult)) {
         $imageData = base64_encode($imageDataRow['imageFile']);
@@ -152,7 +152,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
         The auction was cancelled.
     <?php endif; ?>
 <?php else: ?>
-     Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
+    Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
     <p class="lead">Current bid: £<?php echo(number_format($current_price, 2)) ?></p>
     <h4>Bid History</h4>
     <?php
