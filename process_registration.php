@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData['password'] = htmlspecialchars('');
     $formData['repeatPassword'] = htmlspecialchars('');
 
+    $twoFactorAuth = isset($_POST['twoFactorAuth']) && $_POST['twoFactorAuth'] == '1' ? 1 : 0;    
+
     if (empty($accountType)) {
         $errors[] = "Account type required";    
     } else {
@@ -80,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $query = "INSERT INTO users (userRole, username, email, userPassword) VALUES ('$accountType', '$username', '$email', '$password')";
+    $query = "INSERT INTO users (userRole, username, email, userPassword, authenticationEnabled) VALUES ('$accountType', '$username', '$email', '$password', $twoFactorAuth)";
     $result = mysqli_query($connection, $query)
         or die('Error making insert query: ' . mysqli_error($connection));
     if ($result) {

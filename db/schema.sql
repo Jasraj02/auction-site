@@ -11,7 +11,8 @@ CREATE TABLE Users (
     userRole VARCHAR(20) NOT NULL, 
     username VARCHAR(100) UNIQUE NOT NULL,            
     email VARCHAR(100) UNIQUE NOT NULL,
-    userPassword VARCHAR(100) NOT NULL
+    userPassword VARCHAR(100) NOT NULL,
+    authenticationEnabled BOOLEAN NOT NULL DEFAULT 0
 )
 ENGINE = InnoDB;
 

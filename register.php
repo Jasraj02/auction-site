@@ -72,6 +72,18 @@ if (isset($_SESSION['successMessage'])) {
       <small id="accountTypeHelp" class="form-text text-muted"><span class="text-danger">* Required.</span></small>
     </div>
   </div>
+
+  <div class="form-group row">
+    <label for="twoFactorAuth" class="col-sm-2 col-form-label text-right">Two-Factor Authentication</label>
+    <div class="col-sm-10">
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="twoFactorAuth" name="twoFactorAuth" 
+            value="1" <?= isset($formData['twoFactorAuth']) && $formData['twoFactorAuth'] === '1' ? 'checked' : ''; ?>>
+        <label class="form-check-label" for="twoFactorAuth">Enable Two-Factor Authentication</label>
+      </div>
+      <small id="twoFactorAuthHelp" class="form-text text-muted">Adds an extra layer of security to your account.</small>
+    </div>
+  </div>
   
   <div class="form-group row">
     <label for="preferredCategories" class="col-sm-2 col-form-label text-right">Preferences</label>
