@@ -1,172 +1,83 @@
-DROP DATABASE IF EXISTS auctionSite;
+-- Step 1: Insert dummy users (30 buyers, 20 sellers, and 10 with 'both' roles)
+INSERT INTO Users (userRole, username, email, userPassword)
+SELECT 
+    CASE 
+        WHEN id <= 30 THEN 'buyer'
+        WHEN id <= 50 THEN 'seller'
+        ELSE 'both'
+    END AS userRole,
+    CONCAT('user', id) AS username,
+    CONCAT('user', id, '@example.com') AS email,
+    CONCAT('password', id) AS userPassword
+FROM (SELECT @id := @id + 1 AS id 
+      FROM (SELECT @id := 0) seed, information_schema.tables LIMIT 60) ids;
 
-CREATE DATABASE auctionSite
-DEFAULT CHARACTER SET utf8
-DEFAULT COLLATE utf8_general_ci;
+-- Step 2: Populate Buyers table
+INSERT INTO Buyers (buyerID)
+SELECT userID FROM Users WHERE userRole IN ('buyer', 'both');
 
-USE auctionSite;
+-- Step 3: Populate Sellers table
+INSERT INTO Sellers (sellerID)
+SELECT userID FROM Users WHERE userRole IN ('seller', 'both');
 
-CREATE TABLE Users (
-    userID INT AUTO_INCREMENT PRIMARY KEY,
-    userRole VARCHAR(20) NOT NULL, 
-    username VARCHAR(100) UNIQUE NOT NULL,            
-    email VARCHAR(100) UNIQUE NOT NULL,
-    userPassword VARCHAR(100) NOT NULL
-)
-ENGINE = InnoDB;
+-- Step 4: Insert dummy auctions (50 auctions across 20 sellers and 10 categories)
+INSERT INTO Auctions (sellerID, categoryID, auctionTitle, auctionDescription, startingPrice, reservePrice, currentPrice, startTime, endTime, auctionStatusID)
+SELECT
+    (SELECT sellerID FROM Sellers ORDER BY RAND() LIMIT 1) AS sellerID, -- Random valid sellerID
+    1 + FLOOR(RAND() * 10) AS categoryID, -- Random categoryID from 1-10
+    CONCAT('Auction Title ', id) AS auctionTitle,
+    CONCAT('Auction Description for Item ', id) AS auctionDescription,    
+    10.00 + (RAND() * 490.00) AS startingPrice, -- Random starting price between 10.00 and 500.00
+    20.00 + (RAND() * 480.00) AS reservePrice, -- Random reserve price between 20.00 and 500.00
+    10.00 + (RAND() * 500.00) AS currentPrice, -- Random current price between 10.00 and 500.00
+    NOW() - INTERVAL FLOOR(RAND() * 10) DAY AS startTime, -- Random start time within the last 10 days
+    NOW() + INTERVAL FLOOR(RAND() * 10 + 5) DAY AS endTime, -- Random end time 5-15 days in the future
+    1 AS auctionStatusID
+FROM (SELECT @id := @id + 1 AS id 
+      FROM (SELECT @id := 0) seed, information_schema.tables LIMIT 50) t;
 
-CREATE TABLE Buyers (
-    buyerID INT PRIMARY KEY,
-    FOREIGN KEY (buyerID) REFERENCES Users(userID)
-)
-ENGINE = InnoDB;
+-- Step 5: Insert dummy bids (500 bids randomly distributed across auctions and a subset of buyers)
+INSERT INTO Bids (buyerID, auctionID, bidPrice)
+SELECT
+    (SELECT buyerID FROM Buyers WHERE RAND() < 0.6 ORDER BY RAND() LIMIT 1) AS buyerID, -- 60% chance a buyer is chosen
+    (SELECT auctionID FROM Auctions ORDER BY RAND() LIMIT 1) AS auctionID, -- Random valid auctionID
+    10.00 + (RAND() * 490.00) AS bidPrice -- Random bid price between 10.00 and 500.00
+FROM (SELECT @id := @id + 1 AS id 
+      FROM (SELECT @id := 0) seed, information_schema.tables LIMIT 500) t;
 
-CREATE TABLE Sellers (
-    sellerID INT PRIMARY KEY,
-    FOREIGN KEY (sellerID) REFERENCES Users(userID)
-)
-ENGINE = InnoDB;
+-- Step 6: Insert random buyer preferences (30% chance for a buyer-category pair to exist)
+-- Some buyers will have preferences, some won't
+INSERT INTO Preferences (userID, categoryID)
+SELECT 
+    b.buyerID, 
+    c.categoryID
+FROM Buyers b
+JOIN (SELECT categoryID FROM Categories) c 
+ON RAND() < 0.3 -- 30% chance for a buyer-category pair to exist
+WHERE b.buyerID NOT IN (SELECT buyerID FROM Bids) -- Only buyers who haven't placed bids
+ORDER BY RAND();
 
-CREATE TABLE Categories (
-    categoryID INT AUTO_INCREMENT PRIMARY KEY,
-    categoryType VARCHAR(60) NOT NULL
-)
-ENGINE = InnoDB;
+-- Step 7.1: Manually add a few buyers to the Users table
+INSERT INTO Users (userRole, username, email, userPassword)
+VALUES 
+    ('buyer', 'user101', 'user101@example.com', 'password101'),
+    ('buyer', 'user102', 'user102@example.com', 'password102'),
+    ('buyer', 'user103', 'user103@example.com', 'password103');
 
-INSERT INTO Categories (categoryID, categoryType) VALUES (1, 'art');
-INSERT INTO Categories (categoryID, categoryType) VALUES (2, 'electronics');
-INSERT INTO Categories (categoryID, categoryType) VALUES (3, 'fashion');
-INSERT INTO Categories (categoryID, categoryType) VALUES (4, 'health');
-INSERT INTO Categories (categoryID, categoryType) VALUES (5, 'home');
-INSERT INTO Categories (categoryID, categoryType) VALUES (6, 'lifestyle');
-INSERT INTO Categories (categoryID, categoryType) VALUES (7, 'media');
-INSERT INTO Categories (categoryID, categoryType) VALUES (8, 'others');
-INSERT INTO Categories (categoryID, categoryType) VALUES (9, 'vehicles');
-INSERT INTO Categories (categoryID, categoryType) VALUES (10, 'workplace');
+-- Step 7.2: Insert the newly created users into the Buyers table
+INSERT INTO Buyers (buyerID)
+SELECT userID FROM Users WHERE username IN ('user101', 'user102', 'user103');
 
-CREATE TABLE Images (
-    imageID INT AUTO_INCREMENT PRIMARY KEY,
-    imageFileName VARCHAR(250) NOT NULL,
-    imageFile MEDIUMBLOB NOT NULL
-)
-ENGINE = InnoDB;
+-- Step 7.3: Add buyer preferences for specific buyers
+INSERT INTO Preferences (userID, categoryID)
+VALUES 
+    ((SELECT userID FROM Users WHERE username = 'user101'), 1),  -- user101 prefers 'art' category
+    ((SELECT userID FROM Users WHERE username = 'user103'), 3);  -- user103 prefers 'fashion' category
 
-CREATE TABLE AuctionStatus (
-    auctionStatusID INT AUTO_INCREMENT PRIMARY KEY,
-    auctionStatusType VARCHAR(60) NOT NULL
-)
-ENGINE = InnoDB;
-
-INSERT INTO AuctionStatus (auctionStatusID, auctionStatusType) VALUES (1, 'ongoing');
-INSERT INTO AuctionStatus (auctionStatusID, auctionStatusType) VALUES (2, 'completed');
-INSERT INTO AuctionStatus (auctionStatusID, auctionStatusType) VALUES (3, 'unsuccessful');
-INSERT INTO AuctionStatus (auctionStatusID, auctionStatusType) VALUES (4, 'expiredNoBids');
-
-CREATE TABLE Auctions (
-    auctionID INT AUTO_INCREMENT PRIMARY KEY,
-    auctionTitle VARCHAR(50) NOT NULL,
-    sellerID INT NOT NULL,
-    categoryID INT NOT NULL,
-    auctionStatusID INT NOT NULL,
-    FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
-    FOREIGN KEY (categoryID) REFERENCES Categories(categoryID),
-    FOREIGN KEY (auctionStatusID) REFERENCES AuctionStatus(auctionStatusID),
-    auctionDescription VARCHAR(100) NOT NULL, 
-    imageID INT,
-    FOREIGN KEY (imageID) REFERENCES Images(imageID),
-    startingPrice DECIMAL(10, 2) NOT NULL,
-    reservePrice DECIMAL(10, 2) NOT NULL,
-    currentPrice DECIMAL(10, 2) NOT NULL,
-    startTime TIMESTAMP NOT NULL, 
-    endTime TIMESTAMP NOT NULL, 
-    expiryNotificationsSent BOOLEAN NOT NULL DEFAULT 0   
-)
-ENGINE = InnoDB;
-
-CREATE TABLE UserViews (
-    userID INT NOT NULL,
-    auctionID INT NOT NULL,
-    FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
-    viewTime TIMESTAMP NOT NULL
-)
-ENGINE = InnoDB;
-
-CREATE TABLE Bids (
-    bidID INT AUTO_INCREMENT PRIMARY KEY,
-    buyerID INT NOT NULL,
-    auctionID INT NOT NULL,
-    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
-    bidPrice DECIMAL(10, 2) NOT NULL  
-)
-ENGINE = InnoDB;
-
-CREATE TABLE NotificationContent (
-    notificationTypeID INT AUTO_INCREMENT PRIMARY KEY,
-    notificationType VARCHAR(60) NOT NULL    
-)
-ENGINE = InnoDB;
-
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (1, 'completedWinner');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (2, 'completedSeller');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (3, 'completedWatchlist');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (4, 'unsuccessfulBidder');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (5, 'unsuccessfulSeller');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (6, 'unsuccessfulWatchlist');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (7, 'noBidsSeller');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (8, 'noBidsWatchlist');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (9, 'ongoingOutbid');
-INSERT INTO NotificationContent (notificationTypeID, notificationType) VALUES (10, '2fa');
-
-CREATE TABLE Notifications (
-    notificationID INT AUTO_INCREMENT PRIMARY KEY,
-    userID INT NOT NULL,
-    auctionID INT,
-    notificationTypeID INT NOT NULL, 
-    sentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID)
-)
-ENGINE = InnoDB;
-
-CREATE TABLE Authentication (
-    userID INT NOT NULL,
-    authenticationCode INT NOT NULL,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES Users(userID)
-)
-ENGINE = InnoDB;
-
-CREATE TABLE Watchlists (
-    buyerID INT NOT NULL,
-    auctionID INT NOT NULL,
-    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
-    notificationEnabled BOOLEAN NOT NULL DEFAULT TRUE
-)
-ENGINE = InnoDB;
-
-CREATE TABLE Recommendations (
-    recommendationID INT AUTO_INCREMENT PRIMARY KEY,
-    buyerID INT NOT NULL,
-    auctionID INT NOT NULL,
-    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
-    FOREIGN KEY (auctionID) REFERENCES Auctions(auctionID),
-    recommendationScore DECIMAL(3, 2) NOT NULL
-)
-ENGINE = InnoDB;
-
-CREATE TABLE Preferences (
-    userID INT NOT NULL,
-    categoryID INT NOT NULL,
-    FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (categoryID) REFERENCES Categories(categoryID)
-)
-ENGINE = InnoDB;
-
-ALTER TABLE Preferences
-ADD CONSTRAINT fk_user FOREIGN KEY (userID) REFERENCES Users(userID) ON DELETE CASCADE,
-ADD CONSTRAINT fk_category FOREIGN KEY (categoryID) REFERENCES Categories(categoryID) ON DELETE CASCADE;
-
-
+-- Step 8: set current price to highest bid (for notification testing to work)
+UPDATE Auctions a
+SET currentPrice = COALESCE((
+    SELECT MAX(b.bidPrice)
+    FROM Bids b
+    WHERE b.auctionID = a.auctionID
+), a.startingPrice);

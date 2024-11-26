@@ -67,7 +67,7 @@ CREATE TABLE Auctions (
     auctionTitle VARCHAR(50) NOT NULL,
     sellerID INT NOT NULL,
     categoryID INT NOT NULL,
-    auctionStatusID INT NOT NULL,
+    auctionStatusID INT NOT NULL DEFAULT 1,
     FOREIGN KEY (sellerID) REFERENCES Sellers(sellerID),
     FOREIGN KEY (categoryID) REFERENCES Categories(categoryID),
     FOREIGN KEY (auctionStatusID) REFERENCES AuctionStatus(auctionStatusID),
