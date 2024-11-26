@@ -9,6 +9,7 @@ session_start();
 
 $errors = [];
 $formData = [];
+$preferredCategories = $_POST['preferredCategories'] ?? [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accountType = $_POST['accountType'] ?? '';
@@ -100,12 +101,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_query($connection, $sellerQuery)
                 or die('Error inserting into buyers table: ' . mysqli_error($connection));
         }
+
+        foreach ($preferredCategories as $categoryID) {
+            $categoryID = mysqli_real_escape_string($connection, $categoryID);
+            $userCategoryQuery = "INSERT INTO preferences (userID, categoryID) VALUES ($userID, $categoryID)";
+            mysqli_query($connection, $userCategoryQuery)
+                or die('Error inserting user-category pair: ' . mysqli_error($connection));
+        }
+
         $successMessage = 'Successfully created account!';
         $_SESSION['successMessage'] = $successMessage;
         header('Location: register.php');
         exit;
-    }
-
+    }    
     mysqli_close($connection);    
 }
 ?>

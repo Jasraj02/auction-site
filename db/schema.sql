@@ -157,12 +157,16 @@ CREATE TABLE Recommendations (
 )
 ENGINE = InnoDB;
 
-CREATE TABLE BuyerPreferences (
-    buyerID INT NOT NULL,
+CREATE TABLE Preferences (
+    userID INT NOT NULL,
     categoryID INT NOT NULL,
-    FOREIGN KEY (buyerID) REFERENCES Buyers(buyerID),
+    FOREIGN KEY (userID) REFERENCES Users(userID),
     FOREIGN KEY (categoryID) REFERENCES Categories(categoryID)
 )
 ENGINE = InnoDB;
+
+ALTER TABLE Preferences
+ADD CONSTRAINT fk_user FOREIGN KEY (userID) REFERENCES Users(userID) ON DELETE CASCADE,
+ADD CONSTRAINT fk_category FOREIGN KEY (categoryID) REFERENCES Categories(categoryID) ON DELETE CASCADE;
 
 
