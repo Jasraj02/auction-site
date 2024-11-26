@@ -21,10 +21,11 @@ INSERT INTO Sellers (sellerID)
 SELECT userID FROM Users WHERE userRole IN ('seller', 'both');
 
 -- Step 4: Insert dummy auctions (50 auctions across 20 sellers and 10 categories)
-INSERT INTO Auctions (sellerID, categoryID, auctionTitle, auctionDescription, startingPrice, reservePrice, currentPrice, startTime, endTime)
+INSERT INTO Auctions (sellerID, categoryID, auctionStatusID, auctionTitle, auctionDescription, startingPrice, reservePrice, currentPrice, startTime, endTime)
 SELECT
     (SELECT sellerID FROM Sellers ORDER BY RAND() LIMIT 1) AS sellerID, -- Random valid sellerID
     1 + FLOOR(RAND() * 10) AS categoryID, -- Random categoryID from 1-10
+    1 AS auctionStatusID, -- Default value set to 'ongoing'
     CONCAT('Auction Title ', id) AS auctionTitle,
     CONCAT('Auction Description for Item ', id) AS auctionDescription,
     10.00 + (RAND() * 490.00) AS startingPrice, -- Random starting price between 10.00 and 500.00

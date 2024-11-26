@@ -39,9 +39,11 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && $_SESSIO
 }
 //use item_id to make a query to the database.
 $searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished,
-                (SELECT COUNT(*) FROM UserViews WHERE auctionID = $item_id) AS viewCount
+                (SELECT COUNT(*) FROM UserViews WHERE auctionID = $item_id) AS viewCount,
+                auctionStatus.auctionStatusType
                 FROM Auctions
                 LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
+                LEFT JOIN auctionStatus ON Auctions.auctionStatusID = auctionStatus.auctionStatusID
                 WHERE Auctions.auctionID = $item_id";
 
 $searchQuery .= " GROUP BY Auctions.auctionID";
@@ -164,14 +166,13 @@ else {
   <?php  //Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
   //       to lack of high-enough bids   **add ability to cancel and view expired auctions***
+            
   if ($Finished): ?>
     This auction ended on <?php echo(date_format($end_time, 'j M H:i')) ?>
-    <?php if ($auction['status'] === 'completed'): ?>
+    <?php if ($auction['auctionStatusType'] === 'completed'): ?>
       Winning bid: £<?php echo(number_format($current_price, 2)); ?>
-    <?php elseif ($auction['status'] === 'unsuccessful'): ?>
-        The reserve price was not met.
-    <?php elseif ($auction['status'] === 'cancelled'): ?>
-        The auction was cancelled.
+    <?php elseif ($auction['auctionStatusType'] === 'unsuccessful'): ?>
+        The reserve price was not met.            
     <?php endif; ?>
 <?php else: ?>
      Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  

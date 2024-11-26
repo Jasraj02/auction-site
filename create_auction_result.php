@@ -131,6 +131,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $errorAuction[] = "Invalid category selected.";
     }
+
+    // set auctionStatusID to 1 (ongoing)
+    $auctionStatusID = 1;
     
     // perform error checks for Image (check image name for correct fileformat)
     if (isset($_FILES['imageFile']) && $_FILES['imageFile']['error'] === UPLOAD_ERR_OK) {
@@ -214,10 +217,10 @@ if (isset($imageFileName)){
     mysqli_query($connection, $imgSQLQuery) or die("Error creating the INSERT Image query".mysql_error($connection));
     $imageID = mysqli_insert_id($connection);
 
-    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,imageID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime',$imageID);";
+    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,imageID,auctionStatusID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime',$imageID, $auctionStatusID);";
 
 } else {
-    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime');";
+    $sqlQuery = "INSERT INTO Auctions (auctionTitle,sellerID,categoryID,auctionDescription,startingPrice,reservePrice,currentPrice,startTime,endTime,auctionStatusID) VALUES ('$auctionTitle',$sellerID,$categoryID,'$auctionDetails',$startingPrice,$reservePrice,$startingPrice,'$currentTime','$endTime', $auctionStatusID);";
 }
 
 // do the upload to the database 
