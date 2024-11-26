@@ -27,7 +27,7 @@
   <!-- Custom CSS file -->
   <link rel="stylesheet" href="css/custom.css">
 
-  <title>[My Auction Site] <!--CHANGEME!--></title>
+  <title>COMP0178 Group 22 2024</title>
 </head>
 
 

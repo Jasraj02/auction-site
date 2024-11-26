@@ -131,11 +131,13 @@ CREATE TABLE Notifications (
 )
 ENGINE = InnoDB;
 
-CREATE TABLE Authentication (
+CREATE TABLE AuthenticationCodes (
+    authenticationCodeID INT AUTO_INCREMENT PRIMARY KEY,
     userID INT NOT NULL,
     authenticationCode INT NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES Users(userID)
+    FOREIGN KEY (userID) REFERENCES Users(userID),
+    UNIQUE(authenticationCodeID)
 )
 ENGINE = InnoDB;
 

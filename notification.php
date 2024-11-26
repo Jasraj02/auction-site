@@ -6,6 +6,85 @@ require_once __DIR__ . '/vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+function generateUniqueCode($connection) {
+    do {
+        $authCode = random_int(10000000, 99999999);
+
+        // Check if the code already exists in the database
+        $checkQuery = "SELECT authenticationCode FROM authenticationCodes WHERE authenticationCode = $authCode";
+        $checkResult = mysqli_query($connection, $checkQuery);
+        $isUnique = mysqli_num_rows($checkResult) === 0;
+        mysqli_free_result($checkResult);
+    } while (!$isUnique);
+
+    return $authCode;
+}
+
+function emailAuthentication($userID) {
+    global $connection; 
+    
+    if (!$connection) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
+
+    $usernameQuery = "SELECT username, email FROM users WHERE userID = $userID";
+    $usernameResult = mysqli_query($connection, $usernameQuery);
+    while ($row = mysqli_fetch_assoc($usernameResult)) {
+        $username = $row['username'];
+        $email = $row['email'];
+    }
+
+    $checkAuthQuery = "SELECT authenticationEnabled FROM users WHERE userID = $userID";
+    $checkAuthResult = mysqli_query($connection, $checkAuthQuery);
+    while ($row = mysqli_fetch_assoc($checkAuthResult)) {
+        $checkAuth = $row['authenticationEnabled'];
+    }
+
+    if (!$checkAuthResult) {
+        return false;
+    }
+
+    $authCode = generateUniqueCode($connection);
+
+    $insertQuery = "INSERT INTO authenticationCodes (userID, authenticationCode) VALUES ($userID, $authCode)";
+    $insertResult = mysqli_query($connection, $insertQuery);
+
+    // Mail configuration        
+    $mailUsernameTo = '2024comp0178group22@gmail.com'; // test "to" account: password = comp0178group222024
+    $mailUsernameFrom = 'voxvulgaris2993@gmail.com'; // test "from" account
+    $mailPassword = 'vozf uzpk xzof iiqb';
+    $mail = new PHPMailer(true);
+
+    $sent = true;
+
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';  
+        $mail->SMTPAuth = true;
+        $mail->Username = $mailUsernameFrom;  
+        $mail->Password = $mailPassword;  
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($mailUsernameFrom, 'Auction App');
+        $mail->addAddress($mailUsernameTo, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "$username: 2FA";
+        $mail->Body = "$username, enter the following 8-digit code within 5 minutes: $authCode";
+
+        $mail->send();        
+    } catch (Exception $e) {
+        echo "Email to seller could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        $sent = false;        
+    }
+    if ($sent) {
+        $insertionQuery = "INSERT INTO notifications (userID, auctionID, notificationTypeID, sentAt) 
+                           VALUES ('$userID', NULL, 10, NOW())";
+        mysqli_query($connection, $insertionQuery);
+    }
+}
+
 function emailOutbid($auctionID, $auctionTitle, $outbidID, $outbidUsername, $outbidPrice) {
     global $connection; 
     
@@ -351,7 +430,6 @@ function emailCompleted($auctionID) {
     }
     return $allNotificationsSent;
 }
-//emailCompleted(64);
 
 function emailUnsuccessful($auctionID) {    
     global $connection; 
