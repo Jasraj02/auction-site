@@ -68,7 +68,7 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
        
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
-      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysql_error());
+      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysqli_error($connection));
 
       if ($imageDataResult && $imageDataRow = mysqli_fetch_assoc($imageDataResult)) {
         $imageData = base64_encode($imageDataRow['imageFile']);
@@ -198,7 +198,14 @@ else {
 	    <input type="number" name="bid", class="form-control" id="bid" <?php echo($disabled);?> >
     </div>
     <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
-  </form>
+  </form><br>
+  <?php 
+  $suggestedPrice = suggestedPriceIncrease($item_id,$connection); 
+  $suggestedPrice = $suggestedPrice * ((float)$current_price) / 100;
+  $suggestedPrice = $suggestedPrice + ((float)$current_price);
+  $suggestedPrice = number_format($suggestedPrice, 2);
+  ?>
+  <p class="form-control">Suggested bid: £<?php echo($suggestedPrice); ?></p>
 <?php endif ?>
 
   

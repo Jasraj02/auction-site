@@ -79,6 +79,9 @@
 	<li class="nav-item mx-1">
       <a class="nav-link" href="mylistings.php">My Listings</a>
     </li>
+  <li class="nav-item mx-1">
+      <a class="nav-link" href="auction_analytics.php">Auction Analytics</a>
+    </li>
 	<li class="nav-item ml-3">
       <a class="nav-link btn border-light" href="create_auction.php">+ Create auction</a>
     </li>');
@@ -97,6 +100,9 @@
     <li class="nav-item mx-1">
         <a class="nav-link" href="mylistings.php">My Listings</a>
       </li>
+    <li class="nav-item mx-1">
+      <a class="nav-link" href="auction_analytics.php">Auction Analytics</a>
+    </li>
     <li class="nav-item ml-3">
         <a class="nav-link btn border-light" href="create_auction.php">+ Create auction</a>
       </li>');
