@@ -40,7 +40,11 @@ if ($liveAuctionsResult && mysqli_num_rows($liveAuctionsResult) > 0) {
 
         $viewAmount = giveAuctionViews($auctionID,$connection);
         $bidAmount = giveAuctionBids($auctionID,$connection);
-        $viewBidRatio = round($viewAmount / $bidAmount ,1);
+        if ($bidAmount > 0) {
+    $viewBidRatio = round($viewAmount / $bidAmount, 1);
+} else {
+    $viewBidRatio = 0;
+}
 
         echo("<li class='list-group-item'>
                 <strong><a href='listing.php?item_id=$auctionID'>$auctionTitle</a></strong>
