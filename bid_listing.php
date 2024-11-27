@@ -11,8 +11,38 @@ $item_id = $_GET['item_id'];
 // https://stackoverflow.com/questions/1283327/how-to-get-url-of-current-page-in-php
 $current_url = $_SERVER['REQUEST_URI'];
 
+//initialise view count
+$viewCount = 0;
+
+//track unique views if the user is logged in and is a buyer
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && $_SESSION['account_type'] !== 'seller') {
+  if (isset($_SESSION['userID'])) { // Check if userID is set
+    $user_id = $_SESSION['userID'];
+
+    $sellerQuery = "SELECT sellerID FROM Auctions WHERE auctionID = $item_id";
+    $sellerResult = mysqli_query($connection, $sellerQuery);
+
+      if ($sellerResult && $sellerRow = mysqli_fetch_assoc($sellerResult)) {
+          $seller_id = $sellerRow['sellerID'];
+
+      //check is user has already viewed the auction
+      //only add view if user is not the seller
+        if ($user_id !== $seller_id) {
+          $viewCheckQuery = "SELECT * FROM UserViews WHERE auctionID = $item_id AND userID = $user_id";
+          $viewResult = mysqli_query($connection, $viewCheckQuery);
+            
+          if (mysqli_num_rows($viewResult) === 0) {
+              //add new view
+              $insertViewQuery = "INSERT INTO UserViews (userID, auctionID, viewTime) VALUES ($user_id, $item_id, NOW())";
+              mysqli_query($connection, $insertViewQuery) or die("Error inserting view record: " . mysqli_error($connection));
+        }
+      }
+    }
+  }
+}
+
 //use item_id to make a query to the database.
-$searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished
+$searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bids.bidID) as numberBids, Auctions.endTime < CURRENT_TIMESTAMP() AS Finished, Auctions.startTime AS dateAdded, (SELECT COUNT(*) FROM UserViews WHERE auctionID = $item_id) AS viewCount
                 FROM Auctions
                 LEFT JOIN Bids ON Auctions.auctionID = Bids.auctionID
                 WHERE Auctions.auctionID = $item_id";
@@ -31,10 +61,12 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $end_time = new DateTime($auction['endTime']);
     $Finished = $auction['Finished'];
     $imageID = $auction['imageID'];
+    $viewCount = $auction['viewCount'];
+    $dateAdded = $auction['dateAdded']; 
     
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
-      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysql_error());
+      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysqli_error($connection));
 
       if ($imageDataResult && $imageDataRow = mysqli_fetch_assoc($imageDataResult)) {
         $imageData = base64_encode($imageDataRow['imageFile']);
@@ -81,6 +113,8 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 <div class="row"> <!-- Row #1 with auction title + watch button -->
   <div class="col-sm-8"> <!-- Left col -->
     <h2 class="my-3"><?php echo($title); ?></h2>
+    <p>Views: <?php echo $viewCount; ?></p> <!-- Display view count -->
+    <p>Date Added: <?php echo date_format(new DateTime($dateAdded), 'j M Y H:i'); ?></p> <!-- Display date added -->
   </div>
 </div>
 
@@ -118,7 +152,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
         The auction was cancelled.
     <?php endif; ?>
 <?php else: ?>
-     Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
+    Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
     <p class="lead">Current bid: £<?php echo(number_format($current_price, 2)) ?></p>
     <h4>Bid History</h4>
     <?php

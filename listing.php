@@ -48,6 +48,7 @@ $searchQuery = "SELECT Auctions.*, MAX(Bids.bidPrice) as currentPrice, COUNT(Bid
 
 $searchQuery .= " GROUP BY Auctions.auctionID";
 
+
 //Auctions that have ended may pull a different set of data,
   //       like whether the auction ended in a sale or was cancelled due
   //       to lack of high-enough bids.
@@ -62,10 +63,11 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $imageID = $auction['imageID'];
     $sellerID = $auction['sellerID'];
     $viewCount = $auction['viewCount'];
-    
+    $dateAdded = $auction['dateAdded']; 
+       
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
-      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysql_error());
+      $imageDataResult = mysqli_query($connection, $imageDataQuery) or die("Error making select userData query".mysqli_error($connection));
 
       if ($imageDataResult && $imageDataRow = mysqli_fetch_assoc($imageDataResult)) {
         $imageData = base64_encode($imageDataRow['imageFile']);
@@ -126,6 +128,7 @@ else {
   <div class="col-sm-8"> <!-- Left col -->
     <h2 class="my-3"><?php echo($title); ?></h2>
     <p>Views: <?php echo $viewCount; ?></p> <!-- Display view count -->
+    <p>Date Added: <?php echo date_format(new DateTime($dateAdded), 'j M Y H:i'); ?></p> <!-- Display date added -->
   </div>
   <div class="col-sm-4 align-self-center"> <!-- Right col -->
 <?php 
@@ -193,7 +196,14 @@ else {
 	    <input type="number" name="bid", class="form-control" id="bid" <?php echo($disabled);?> >
     </div>
     <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
-  </form>
+  </form><br>
+  <?php 
+  $suggestedPrice = suggestedPriceIncrease($item_id,$connection); 
+  $suggestedPrice = $suggestedPrice * ((float)$current_price) / 100;
+  $suggestedPrice = $suggestedPrice + ((float)$current_price);
+  $suggestedPrice = number_format($suggestedPrice, 2);
+  ?>
+  <p class="form-control">Suggested bid: £<?php echo($suggestedPrice); ?></p>
 <?php endif ?>
 
   
