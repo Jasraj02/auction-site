@@ -68,7 +68,8 @@ if ($bid_price > $current_price) {
     $query = "UPDATE Auctions SET currentPrice = $bid_price WHERE auctionID = $item_id";
     mysqli_query($connection, $query) or die("Error making query to database.");
     $query = "INSERT INTO Bids (buyerID, auctionID, bidPrice) VALUES ($user_id, $item_id, $bid_price)";
-    mysqli_query($connection, $query) or die("Error making query to database.");    
+    mysqli_query($connection, $query) or die("Error making query to database.");
+    header("refresh: 2; url=$previous_url");  
 } else {
     echo "Invalid bid. Please enter a value greater than the current price.";
 }
@@ -86,7 +87,10 @@ while ($row = mysqli_fetch_assoc($priorBidderResult)) {
     $priorBidderUsername = $row['username'];
 }
 
-emailOutbid($item_id, $auctionTitle, $priorBidderID, $priorBidderUsername, $bid_price);
+if (isset($priorBidderID) && !($priorBidderID == $user_id)) {
+    emailOutbid($item_id, $auctionTitle, $priorBidderID, $priorBidderUsername, $bid_price);
+}
+
 
 mysqli_close($connection);
 echo "<br>Redirecting to previous page.";
