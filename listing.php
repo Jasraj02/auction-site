@@ -177,44 +177,62 @@ else {
     <?php elseif ($auction['auctionStatusType'] === 'unsuccessful'): ?>
         The reserve price was not met.            
     <?php endif; ?>
-<?php else: ?>
-     Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
+    <?php else: ?>
+    <p> Auction ends <?php echo(date_format($end_time, 'j M H:i') . $time_remaining) ?></p>  
     <p class="lead">Current bid: £<?php echo(number_format($current_price, 2)) ?></p>
-
+    
     <!-- Bidding form -->
     <form method="POST" action="place_bid.php">
       <div class="input-group">
         <div class="input-group-prepend">
           <span class="input-group-text">£</span>
         </div>
-      <!-- https://stackoverflow.com/questions/4598779/post-extra-values-in-an-html-form -->
-      <input type="hidden" name="item_id" value=<?php echo $item_id ?>>  
-      <?php if (isset($_SESSION['userID'])): ?>
-       <input type="hidden" name="user_id", value=<?php echo $_SESSION['userID'] ?>>    
-      <?php endif; ?>
-	    <input type="hidden" name="previous_url", value=<?php echo $current_url ?>>
-	    <input type="number" name="bid", class="form-control" id="bid" <?php echo($disabled);?> >
-    </div>
-    <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
-  </form><br>
-  <?php 
-  $suggestedPrice = suggestedPriceIncrease($item_id,$connection); 
-  $suggestedPrice = $suggestedPrice * ((float)$current_price) / 100;
-  $suggestedPrice = $suggestedPrice + ((float)$current_price);
-  $suggestedPrice = number_format($suggestedPrice, 2);
-  ?>
-  <p class="form-control">Suggested bid: £<?php echo($suggestedPrice); ?></p>
-<?php endif ?>
-
-  
-  </div> <!-- End of right col with bidding info -->
-
-</div> <!-- End of row #2 -->
-
-
+        <!-- Hidden fields -->
+        <input type="hidden" name="item_id" value="<?php echo $item_id; ?>">  
+        <?php if (isset($_SESSION['userID'])): ?>
+            <input type="hidden" name="user_id" value="<?php echo $_SESSION['userID']; ?>">    
+        <?php endif; ?>
+        <input type="hidden" name="previous_url" value="<?php echo $current_url; ?>">
+        <!-- Bid amount input -->
+        <input type="number" name="bid" class="form-control" id="bid" <?php echo($disabled);?> >
+      </div>
+      <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
+    </form><br>
+    
+    <?php 
+    $suggestedPrice = suggestedPriceIncrease($item_id,$connection); 
+    $suggestedPrice = $suggestedPrice * ((float)$current_price) / 100;
+    $suggestedPrice = $suggestedPrice + ((float)$current_price);
+    $suggestedPrice = number_format($suggestedPrice, 2);
+    ?>
+    <p class="form-control">Suggested bid: £<?php echo($suggestedPrice); ?></p>
+    
+<!-- 
 
 <?php include_once("footer.php")?>
 
+    <h4>Bid History</h4>
+    <?php
+        $query = "SELECT username, bidPrice FROM Users, Bids WHERE Bids.auctionID = $item_id AND Bids.buyerID = Users.userID ORDER BY Bids.bidID DESC";
+        $result = mysqli_query($connection, $query) or die("Error making query to database.");
+
+        if (mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) { 
+                $username = htmlspecialchars($row['username']);
+                $bid_price = htmlspecialchars($row['bidPrice']);
+                echo "<p>$username: £$bid_price</p>";
+            }
+          } else {
+            // No bid history
+            echo "<p>N/A</p>";
+        }
+        ?>
+<?php endif ?>
+    </div> <!-- End of right col with bidding info -->
+
+</div> <!-- End of row #2 -->
+
+<?php include_once("footer.php")?>
 
 <script> 
 
