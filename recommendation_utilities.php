@@ -11,7 +11,7 @@
     }
     
     function checkBuyerPreferences($connection, $userID) {
-        $checkBuyerPreferencesQuery = "SELECT COUNT(categoryID) AS count FROM buyerPreferences WHERE buyerID = $userID";
+        $checkBuyerPreferencesQuery = "SELECT COUNT(categoryID) AS count FROM preferences WHERE userID = $userID";
         $checkBuyerPreferencesResult = mysqli_query($connection, $checkBuyerPreferencesQuery);
         $checkBuyerPreferencesResultRow = mysqli_fetch_array($checkBuyerPreferencesResult);
         return $checkBuyerPreferencesResultRow['count'];

@@ -9,6 +9,7 @@ session_start();
 
 $errors = [];
 $formData = [];
+$preferredCategories = $_POST['preferredCategories'] ?? [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accountType = $_POST['accountType'] ?? '';
@@ -19,6 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $formData['password'] = htmlspecialchars('');
     $formData['repeatPassword'] = htmlspecialchars('');
+
+    $twoFactorAuth = isset($_POST['twoFactorAuth']) && $_POST['twoFactorAuth'] == '1' ? 1 : 0;    
 
     if (empty($accountType)) {
         $errors[] = "Account type required";    
@@ -79,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $query = "INSERT INTO users (userRole, username, email, userPassword) VALUES ('$accountType', '$username', '$email', '$password')";
+    $query = "INSERT INTO users (userRole, username, email, userPassword, authenticationEnabled) VALUES ('$accountType', '$username', '$email', '$password', $twoFactorAuth)";
     $result = mysqli_query($connection, $query)
         or die('Error making insert query: ' . mysqli_error($connection));
     if ($result) {
@@ -100,12 +103,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_query($connection, $sellerQuery)
                 or die('Error inserting into buyers table: ' . mysqli_error($connection));
         }
+
+        foreach ($preferredCategories as $categoryID) {
+            $categoryID = mysqli_real_escape_string($connection, $categoryID);
+            $userCategoryQuery = "INSERT INTO preferences (userID, categoryID) VALUES ($userID, $categoryID)";
+            mysqli_query($connection, $userCategoryQuery)
+                or die('Error inserting user-category pair: ' . mysqli_error($connection));
+        }
+
         $successMessage = 'Successfully created account!';
         $_SESSION['successMessage'] = $successMessage;
         header('Location: register.php');
         exit;
-    }
-
+    }    
     mysqli_close($connection);    
 }
 ?>

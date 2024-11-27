@@ -6,6 +6,7 @@
 // For now, I will just set session variables and redirect.
 
 require 'database.php'; 
+require 'notification.php';
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,7 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         or die('Error logging in: ' . mysqli_error($connection));
 
     if (mysqli_num_rows($loginResult) === 1) {
-        $_SESSION['logged_in'] = true;
+        $authQuery = "SELECT authenticationEnabled FROM users WHERE email = '$email'";
+        $authResult = mysqli_query($connection, $authQuery);
+        $authResultRow = mysqli_fetch_array($authResult);
+        $authStatus = $authResultRow['authenticationEnabled'];
         $usernameQuery = "SELECT username FROM users WHERE email = '$email'";
         $usernameResult = mysqli_query($connection, $usernameQuery);
         $usernameResultRow = mysqli_fetch_array($usernameResult); 
@@ -34,10 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $accountTypeResultRow = mysqli_fetch_array($accountTypeResult);      
         $_SESSION['username'] = $usernameResultRow['username'];  
         $_SESSION['userID'] = $userIDResultRow['userID'];   
-        $_SESSION['account_type'] = $accountTypeResultRow['userRole'];   
-        echo('<div class="text-center">You are now logged in! You will be redirected shortly!</div>');
-        // Redirect to index after 2 seconds
-        header("refresh:2;url=index.php");
+        $_SESSION['account_type'] = $accountTypeResultRow['userRole']; 
+        if (!$authStatus) {
+            $_SESSION['logged_in'] = true;
+            echo('<div class="text-center">You are now logged in! You will be redirected shortly!</div>');            
+            header("refresh:2;url=index.php");
+        } else {
+            $_SESSION['logged_in'] = false;
+            echo('<div class="text-center">Redirection to 2FA</div>'); 
+            emailAuthentication($_SESSION['userID']);           
+            header("refresh:2;url=authenticate.php");
+        }
     } else {
         if ($email && $password) {
             echo('<div class="text-center">Invalid email or password!</div>');        

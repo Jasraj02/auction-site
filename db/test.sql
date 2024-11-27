@@ -21,17 +21,18 @@ INSERT INTO Sellers (sellerID)
 SELECT userID FROM Users WHERE userRole IN ('seller', 'both');
 
 -- Step 4: Insert dummy auctions (50 auctions across 20 sellers and 10 categories)
-INSERT INTO Auctions (sellerID, categoryID, auctionTitle, auctionDescription, startingPrice, reservePrice, currentPrice, startTime, endTime)
+INSERT INTO Auctions (sellerID, categoryID, auctionTitle, auctionDescription, startingPrice, reservePrice, currentPrice, startTime, endTime, auctionStatusID)
 SELECT
     (SELECT sellerID FROM Sellers ORDER BY RAND() LIMIT 1) AS sellerID, -- Random valid sellerID
     1 + FLOOR(RAND() * 10) AS categoryID, -- Random categoryID from 1-10
     CONCAT('Auction Title ', id) AS auctionTitle,
-    CONCAT('Auction Description for Item ', id) AS auctionDescription,
+    CONCAT('Auction Description for Item ', id) AS auctionDescription,    
     10.00 + (RAND() * 490.00) AS startingPrice, -- Random starting price between 10.00 and 500.00
     20.00 + (RAND() * 480.00) AS reservePrice, -- Random reserve price between 20.00 and 500.00
     10.00 + (RAND() * 500.00) AS currentPrice, -- Random current price between 10.00 and 500.00
     NOW() - INTERVAL FLOOR(RAND() * 10) DAY AS startTime, -- Random start time within the last 10 days
-    NOW() + INTERVAL FLOOR(RAND() * 10 + 5) DAY AS endTime -- Random end time 5-15 days in the future
+    NOW() + INTERVAL FLOOR(RAND() * 10 + 5) DAY AS endTime, -- Random end time 5-15 days in the future
+    1 AS auctionStatusID
 FROM (SELECT @id := @id + 1 AS id 
       FROM (SELECT @id := 0) seed, information_schema.tables LIMIT 50) t;
 
@@ -46,7 +47,7 @@ FROM (SELECT @id := @id + 1 AS id
 
 -- Step 6: Insert random buyer preferences (30% chance for a buyer-category pair to exist)
 -- Some buyers will have preferences, some won't
-INSERT INTO BuyerPreferences (buyerID, categoryID)
+INSERT INTO Preferences (userID, categoryID)
 SELECT 
     b.buyerID, 
     c.categoryID
@@ -68,7 +69,15 @@ INSERT INTO Buyers (buyerID)
 SELECT userID FROM Users WHERE username IN ('user101', 'user102', 'user103');
 
 -- Step 7.3: Add buyer preferences for specific buyers
-INSERT INTO BuyerPreferences (buyerID, categoryID)
+INSERT INTO Preferences (userID, categoryID)
 VALUES 
     ((SELECT userID FROM Users WHERE username = 'user101'), 1),  -- user101 prefers 'art' category
     ((SELECT userID FROM Users WHERE username = 'user103'), 3);  -- user103 prefers 'fashion' category
+
+-- Step 8: set current price to highest bid (for notification testing to work)
+UPDATE Auctions a
+SET currentPrice = COALESCE((
+    SELECT MAX(b.bidPrice)
+    FROM Bids b
+    WHERE b.auctionID = a.auctionID
+), a.startingPrice);
