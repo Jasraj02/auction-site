@@ -98,7 +98,6 @@ $max_page = ceil($totalListings / $resultsPerPage);
 <?php
   // TODO: Loop through results and print them out as list items.
   while ($row = $result->fetch_assoc()) {
-    // [Yan TODO]: Exception Handling
     $item_id = $row["auctionID"];
     $title = $row["auctionTitle"];
     $desc = $row["auctionDescription"];
