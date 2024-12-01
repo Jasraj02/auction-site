@@ -10,9 +10,13 @@ $user_id = $_POST['user_id'];
 $previous_url = $_POST['previous_url'];
 $query = "SELECT * FROM Auctions WHERE auctionID = $item_id";
 $result = mysqli_query($connection, $query) or die("Error making query to database.");
+// https://stackoverflow.com/questions/607264/how-can-i-count-the-numbers-of-rows-that-a-mysql-query-returned
+if (mysqli_num_rows($result) != 1) {
+    // https://www.php.net/manual/en/function.exit.php
+    exit("Error in query result.");
+}
 // https://www.w3schools.com/php/php_mysql_select.asp
 while ($row = $result->fetch_assoc()) {
-    // [Yan TODO]: Exception Handling
     $current_price = $row["currentPrice"];
     $end_time = $row["endTime"]; 
 }
