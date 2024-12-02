@@ -37,6 +37,7 @@ FROM (SELECT @id := @id + 1 AS id
       FROM (SELECT @id := 0) seed, information_schema.tables LIMIT 50) t;
 
 -- Step 5: Insert dummy bids (500 bids randomly distributed across auctions and a subset of buyers)
+/*
 INSERT INTO Bids (buyerID, auctionID, bidPrice)
 SELECT
     (SELECT buyerID FROM Buyers WHERE RAND() < 0.6 ORDER BY RAND() LIMIT 1) AS buyerID, -- 60% chance a buyer is chosen
@@ -44,6 +45,17 @@ SELECT
     10.00 + (RAND() * 490.00) AS bidPrice -- Random bid price between 10.00 and 500.00
 FROM (SELECT @id := @id + 1 AS id 
       FROM (SELECT @id := 0) seed, information_schema.tables LIMIT 500) t;
+*/
+-- Step 5: Insert dummy bids with 500 bids and always increasing prices
+INSERT INTO Bids (buyerID, auctionID, bidPrice)
+SELECT
+    -- Randomly selected buyerID (60% chance a buyer is chosen)
+    (SELECT buyerID FROM Buyers WHERE RAND() < 0.6 ORDER BY RAND() LIMIT 1) AS buyerID,
+    -- Random auctionID from the Auctions table
+    (SELECT auctionID FROM Auctions ORDER BY RAND() LIMIT 1) AS auctionID,
+    -- Incremental bid price starting from a base value of 10.00
+    10.00 + (FLOOR((@id := @id + 1) / 1) * 5.00) AS bidPrice  -- Increment in steps of 5.00
+FROM (SELECT @id := 0) AS init, information_schema.tables LIMIT 500;
 
 -- Step 6: Insert random buyer preferences (30% chance for a buyer-category pair to exist)
 -- Some buyers will have preferences, some won't
@@ -107,3 +119,13 @@ FROM Bids b
 -- Insert multiple views for each auction based on the number of bids
 JOIN Auctions a ON a.auctionID = b.auctionID
 WHERE RAND() < (b.bidPrice / 500);  -- More bids = more views, with a cap at a reasonable percentage (e.g., 1/500 chance per bid price)
+
+-- Step 10: Ensure starting price falls below bid prices
+UPDATE Auctions a
+SET startingPrice = COALESCE((
+    SELECT MIN(b.bidPrice) - 5 -- Set starting price to 5 below the first bid (or any amount you prefer)
+    FROM Bids b
+    WHERE b.auctionID = a.auctionID
+    ORDER BY b.bidPrice ASC
+    LIMIT 1
+), a.startingPrice);
