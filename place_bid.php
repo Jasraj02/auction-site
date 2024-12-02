@@ -43,10 +43,15 @@ if (!$loggedIn) {
 // prevent a user from bidding against her own bid
 $lastBidderQuery = "SELECT buyerID FROM bids WHERE auctionID = $item_id ORDER BY bidPrice DESC LIMIT 1";
 $lastBidderResult = mysqli_query($connection, $lastBidderQuery);
-while ($row = mysqli_fetch_assoc($lastBidderResult)) {
-    $lastBidderID = $row['buyerID'];
+
+$lastBidderID = null;
+if (mysqli_num_rows($lastBidderResult) > 0) {
+    while ($row = mysqli_fetch_assoc($lastBidderResult)) {
+        $lastBidderID = $row['buyerID'];
+    }
 }
-if ($user_id == $lastBidderID) {
+
+if ($lastBidderID !== null && $user_id == $lastBidderID) {
     echo '<div class="alert alert-danger">Cannot bid against own bid. Redirecting.</div>';
     header("refresh: 2; url=$previous_url");
     exit();
@@ -101,5 +106,5 @@ echo "<br>Redirecting to previous page.";
 
 // Project Tutorial 3 PHP and MySQL, slide 31
 // https://stackoverflow.com/questions/6119451/page-redirect-after-certain-time-php
-header("refresh: 2; url=$previous_url");
+header("refresh: 2; url=$previous_url"); 
 ?>

@@ -114,7 +114,7 @@ function emailOutbid($auctionID, $auctionTitle, $outbidID, $outbidUsername, $out
 
         $mail->isHTML(true);
         $mail->Subject = "Auction $auctionTitle: Outbid";
-        $mail->Body = "Hello $outbidUsername,<br><br>On watched auction titled <b>$auctionTitle</b> you have been outbid at a bid price of $outbidPrice.";
+        $mail->Body = "Hello $outbidUsername,<br><br>On auction titled <b>$auctionTitle</b> you have been outbid at a bid price of $outbidPrice.";
 
         $mail->send();        
     } catch (Exception $e) {
@@ -593,7 +593,7 @@ function emailUnsuccessful($auctionID) {
                     $checkNotificationResult = mysqli_query($connection, $checkNotificationQuery);
 
                     if (mysqli_num_rows($checkNotificationResult) == 0) {
-                        $watchlistUsername = $row['username'];
+                        /*$watchlistUsername = $row['username'];*/
                         try {        
                             $mail->isSMTP();
                             $mail->Host = 'smtp.gmail.com';  
@@ -631,5 +631,6 @@ function emailUnsuccessful($auctionID) {
             }
         }        
     }
+    return $allNotificationsSent;
 }
 ?>

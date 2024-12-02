@@ -81,3 +81,29 @@ SET currentPrice = COALESCE((
     FROM Bids b
     WHERE b.auctionID = a.auctionID
 ), a.startingPrice);
+
+-- Step 9: Insert dummy user views, ensuring each auction has at least one view
+INSERT INTO UserViews (userID, auctionID, viewTime)
+SELECT
+    -- Randomly selected buyer/user for the view
+    (SELECT userID FROM Users WHERE userRole IN ('buyer', 'both') ORDER BY RAND() LIMIT 1) AS userID,
+    -- Selected auction from the Auctions table
+    a.auctionID,
+    -- Random view time (within the last 30 days)
+    NOW() - INTERVAL FLOOR(RAND() * 30) DAY AS viewTime
+FROM Auctions a;
+
+-- Step 9.1: Ensure some auctions get multiple views based on bid count
+-- If an auction has more bids, we can insert more views for that auction
+INSERT INTO UserViews (userID, auctionID, viewTime)
+SELECT
+    -- Randomly selected buyer/user for the view
+    (SELECT userID FROM Users WHERE userRole IN ('buyer', 'both') ORDER BY RAND() LIMIT 1) AS userID,
+    -- Selected auction with more bids
+    b.auctionID,
+    -- Random view time (within the last 30 days)
+    NOW() - INTERVAL FLOOR(RAND() * 30) DAY AS viewTime
+FROM Bids b
+-- Insert multiple views for each auction based on the number of bids
+JOIN Auctions a ON a.auctionID = b.auctionID
+WHERE RAND() < (b.bidPrice / 500);  -- More bids = more views, with a cap at a reasonable percentage (e.g., 1/500 chance per bid price)
