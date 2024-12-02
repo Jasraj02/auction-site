@@ -1,4 +1,9 @@
 <?php 
+    if (!isset($_SESSION['userID'])) {
+        die("Error: User is not logged in.");
+    }
+    $userID = $_SESSION['userID'];
+
     $recommendations = [];
     $totalRecommendations = 25;
     $remainingRecommendations = 25;
@@ -21,21 +26,21 @@
     "WITH rankQuery AS (
         SELECT buyerID, COUNT(DISTINCT auctionID) AS buyerRank
         FROM bids
-        WHERE auctionID IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = 1)
-        AND buyerID != 1
+        WHERE auctionID IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = $userID)
+        AND buyerID != $userID
         GROUP BY buyerID
     ),
     auctionsQuery AS (        
         SELECT DISTINCT auctionID
         FROM bids 
-        WHERE buyerID IN (SELECT DISTINCT buyerID FROM bids WHERE auctionID IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = 1) AND buyerID != 1)        
-        AND auctionID NOT IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = 1)        
-        AND auctionID NOT IN (SELECT auctionID FROM watchlists WHERE buyerID = 1)
+        WHERE buyerID IN (SELECT DISTINCT buyerID FROM bids WHERE auctionID IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = $userID) AND buyerID != $userID)        
+        AND auctionID NOT IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = $userID)        
+        AND auctionID NOT IN (SELECT auctionID FROM watchlists WHERE buyerID = $userID)
     ),
     categoriesQuery AS (        
         SELECT DISTINCT categoryID
         FROM auctions
-        WHERE auctionID IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = 1)
+        WHERE auctionID IN (SELECT DISTINCT auctionID FROM bids WHERE buyerID = $userID)
     )    
     SELECT a.auctionID, SUM(r.buyerRank) AS totalRank
     FROM auctionsQuery a    
@@ -50,7 +55,7 @@
 
     $fallbackOneQuery = "SELECT a.auctionID
         FROM auctions a
-        WHERE a.categoryID IN (SELECT categoryID FROM buyerPreferences WHERE buyerID = 1)
+        WHERE a.categoryID IN (SELECT categoryID FROM buyerPreferences WHERE buyerID = $userID)
         AND a.endTime > NOW()
         ORDER BY (SELECT COUNT(*) FROM bids b WHERE a.auctionID = b.auctionID) DESC
         LIMIT $remainingRecommendations;";
