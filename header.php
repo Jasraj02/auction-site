@@ -35,7 +35,7 @@
 
 <!-- Navbars -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light mx-2">
-  <a class="navbar-brand" href="#">Site Name<!--CHANGEME!--></a>
+  <a class="navbar-brand" href="#">UCL Auctions<!--CHANGEME!--></a>
   <?php if ($loggedIn === true): ?>
     <span class="navbar-brand"><?php echo htmlspecialchars($username); ?></span>
   <?php endif; ?>
