@@ -63,7 +63,7 @@ if ($auctionQuery && $auction = mysqli_fetch_assoc($auctionQuery)) {
     $imageID = $auction['imageID'];
     $sellerID = $auction['sellerID'];
     $viewCount = $auction['viewCount'];
-    $dateAdded = $auction['dateAdded']; 
+    $dateAdded = $auction['startTime']; 
        
     if (isset($imageID)) {
       $imageDataQuery = "SELECT imageFile FROM Images WHERE imageID='$imageID'";
@@ -194,7 +194,7 @@ else {
         <?php endif; ?>
         <input type="hidden" name="previous_url" value="<?php echo $current_url; ?>">
         <!-- Bid amount input -->
-        <input type="number" name="bid" class="form-control" id="bid" <?php echo($disabled);?> >
+        <input type="number" name="bid" class="form-control" id="bid" step="0.01" <?php echo($disabled);?> >
       </div>
       <button type="submit" class="btn btn-primary form-control" <?php echo($disabled);?>>Place bid</button>
     </form><br>

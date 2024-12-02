@@ -1,6 +1,7 @@
 <?php include_once("header.php")?>
 <?php require("utilities.php")?>
 <?php require("recommendation_utilities.php")?>
+<?php require_once("database.php"); ?>
 
 <div class="container">
 
@@ -55,14 +56,67 @@
       runFallbackQueryTwo($connection, $fallbackTwoQuery, $recommendations);      
     }
   }
-      
+
+  /*
   echo '<pre>';
     var_dump($recommendations);
   echo '</pre>';
+  */
 
+  // TODO: Loop through results and print them out as list items.  
+?>
 
+<?php
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
-  // TODO: Loop through results and print them out as list items.
-  
+$itemsPerPage = 10;
+
+$offset = ($page - 1) * $itemsPerPage;
+
+$paginatedRecommendations = array_slice($recommendations, $offset, $itemsPerPage);
+
+foreach ($paginatedRecommendations as $auctionID) {
+    $auctionDetails = giveAuctionDetails($auctionID, $connection);
+    
+    if ($auctionDetails) {    
+        $numBids = giveAuctionBids($auctionID, $connection);
+        $userViews = giveAuctionViews($auctionID, $connection);        
+        print_listing_li2(
+            $auctionID, 
+            $auctionDetails['auctionTitle'], 
+            $auctionDetails['auctionDescription'], 
+            $auctionDetails['currentPrice'], 
+            $numBids, 
+            new DateTime($auctionDetails['endTime']), 
+            $userViews,
+            $auctionDetails['startTime'] 
+        );
+    }
+}
+
+echo '<div style="height: 20px;"></div>'; 
+
+$totalRecommendations = count($recommendations);
+
+$totalPages = ceil($totalRecommendations / $itemsPerPage);
+
+echo '<nav aria-label="Page navigation" style="text-align: center;">';
+echo '<ul class="pagination justify-content-center">';
+
+if ($page > 1) {
+    echo '<li class="page-item"><a class="page-link" href="?page=' . ($page - 1) . '">Previous</a></li>';
+}
+
+for ($i = 1; $i <= $totalPages; $i++) {
+    $activeClass = ($i == $page) ? ' active' : '';
+    echo '<li class="page-item' . $activeClass . '"><a class="page-link" href="?page=' . $i . '">' . $i . '</a></li>';
+}
+
+if ($page < $totalPages) {
+    echo '<li class="page-item"><a class="page-link" href="?page=' . ($page + 1) . '">Next</a></li>';
+}
+
+echo '</ul>';
+echo '</nav>';
 ?>
 
